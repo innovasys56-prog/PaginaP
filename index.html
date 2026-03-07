@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/styles-index.css">
+    <title>Página principal</title>
+</head>
+<body>
+    <header>
+        <h1>Bienvenido al Sistema de Atención Psicológica</h1>
+    </header>
+    <main>
+        <a href="login.html" id="loginLink">Iniciar sesión</a>
+        <a href="registro.html" id="registerLink">Registrarse</a>
+    </main>
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginLink = document.getElementById('loginLink');
+            const registerLink = document.getElementById('registerLink');
+            
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = 'login.html';
+            });
+            
+            registerLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = 'registro.html';
+            });
+        });
+    </script>
+</body>
+</html>
