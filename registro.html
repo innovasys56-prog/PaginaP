@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles-registro.css">
+    <title>Registro de Usuario</title>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Registro de Usuario</h2>
+        <form id="registerForm">
+            <label for="nombre">Nombre Completo:</label>
+            <input type="text" id="nombre" name="nombre" required>
+
+            <label for="correo">Correo Institucional:</label>
+            <input type="email" id="correo" name="correo" required>
+            <div class="info-text">Usa tu correo institucional (@edu para estudiantes, @doc para docentes)</div>
+
+            <label for="telefono">Teléfono:</label>
+            <input type="tel" id="telefono" name="telefono" required>
+
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" name="password" required minlength="8">
+            <div class="info-text">Mínimo 8 caracteres</div>
+
+            <div id="mensajeTipoUsuario" class="user-type-message hidden"></div>
+
+            <div id="seccionEstudiante" class="hidden">
+                <label for="carrera">Carrera:</label>
+                <select id="carrera" name="carrera">
+                    <option value="">Selecciona una carrera</option>
+                    <option value="Ingeniería en Sistemas">Ingeniería en Sistemas</option>
+                    <option value="Administración">Administración</option>
+                    <option value="Derecho">Derecho</option>
+                    <option value="Medicina">Medicina</option>
+                </select>
+
+                <label for="cuatrimestre">Cuatrimestre:</label>
+                <select id="cuatrimestre" name="cuatrimestre">
+                    <option value="">Selecciona tu cuatrimestre</option>
+                    <option value="1">1° Cuatrimestre</option>
+                    <option value="2">2° Cuatrimestre</option>
+                    <option value="3">3° Cuatrimestre</option>
+                    <option value="4">4° Cuatrimestre</option>
+                    <option value="5">5° Cuatrimestre</option>
+                </select>
+            </div>
+
+            <div id="seccionDocente" class="hidden">
+                <label for="departamento">Departamento:</label>
+                <select id="departamento" name="departamento">
+                    <option value="">Selecciona tu departamento</option>
+                    <option value="Ciencias Básicas">Ciencias Básicas</option>
+                    <option value="Ingenierías">Ingenierías</option>
+                    <option value="Humanidades">Humanidades</option>
+                </select>
+
+                <label for="especialidad">Especialidad:</label>
+                <input type="text" id="especialidad" name="especialidad">
+
+                <label for="clave_docente">Clave de Docente:</label>
+                <input type="password" id="clave_docente" name="clave_docente">
+                <div class="info-text">Clave proporcionada por la institución</div>
+            </div>
+
+            <div id="mensajeError" class="error"></div>
+
+            <button type="submit">Registrarse</button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { db } from './conexion.js';
+        import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.getElementById('correo').addEventListener('blur', function() {
+            const correo = this.value.toLowerCase();
+            const seccionEstudiante = document.getElementById("seccionEstudiante");
+            const seccionDocente = document.getElementById("seccionDocente");
+            const mensajeTipo = document.getElementById("mensajeTipoUsuario");
+            
+            mensajeTipo.classList.add("hidden");
+            seccionEstudiante.classList.add("hidden");
+            seccionDocente.classList.add("hidden");
+            
+            if (!correo.includes("@")) return;
+            
+            if (correo.includes("@edu")) {
+                mensajeTipo.textContent = "Se ha detectado que eres estudiante. Por favor completa tu información académica.";
+                mensajeTipo.classList.remove("hidden");
+                seccionEstudiante.classList.remove("hidden");
+            } else if (correo.includes("@doc")) {
+                mensajeTipo.textContent = "Se ha detectado que eres docente. Por favor completa tu información profesional.";
+                mensajeTipo.classList.remove("hidden");
+                seccionDocente.classList.remove("hidden");
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const correo = document.getElementById('correo').value.toLowerCase();
+            const mensajeError = document.getElementById('mensajeError');
+            mensajeError.textContent = '';
+            
+            if (!correo.includes("@edu") && !correo.includes("@doc")) {
+                mensajeError.textContent = 'Debes usar un correo institucional válido (@edu o @doc)';
+                return;
+            }
+            
+            if (document.getElementById('password').value.length < 8) {
+                mensajeError.textContent = 'La contraseña debe tener al menos 8 caracteres';
+                return;
+            }
+            
+            const tipo_usuario = correo.includes("@edu") ? 'estudiante' : 'docente';
+            
+            if (tipo_usuario === 'estudiante') {
+                if (!document.getElementById('carrera').value || !document.getElementById('cuatrimestre').value) {
+                    mensajeError.textContent = 'Debes seleccionar una carrera y cuatrimestre';
+                    return;
+                }
+            }
+            
+            if (tipo_usuario === 'docente') {
+                if (!document.getElementById('departamento').value) {
+                    mensajeError.textContent = 'Debes seleccionar un departamento';
+                    return;
+                }
+                if (document.getElementById('clave_docente').value !== "claveDocente2025") {
+                    mensajeError.textContent = 'Clave de docente incorrecta';
+                    return;
+                }
+            }
+            
+            try {
+                const usuariosRef = collection(db, "usuarios");
+                const q = query(usuariosRef, where("correo", "==", correo));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    mensajeError.textContent = 'Este correo ya está registrado';
+                    return;
+                }
+                
+                const userData = {
+                    nombre: document.getElementById('nombre').value,
+                    correo: correo,
+                    telefono: document.getElementById('telefono').value,
+                    password: document.getElementById('password').value,
+                    tipo_usuario: tipo_usuario,
+                    carrera: document.getElementById('carrera')?.value || null,
+                    cuatrimestre: document.getElementById('cuatrimestre')?.value || null,
+                    departamento: document.getElementById('departamento')?.value || null,
+                    especialidad: document.getElementById('especialidad')?.value || null,
+                    fecha_registro: new Date().toISOString()
+                };
+                
+                await addDoc(collection(db, "usuarios"), userData);
+                
+                alert(`¡Registro exitoso! Bienvenido ${userData.nombre}`);
+                window.location.href = 'login.html';
+                
+            } catch (error) {
+                mensajeError.textContent = 'Error al registrar: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles-login.css">
+    <title>Iniciar Sesión UTC</title>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Iniciar Sesión UTC</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="correo">Correo Institucional</label>
+                <input type="email" id="correo" name="correo" required placeholder="tu.correo@institucion.edu">
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••">
+            </div>
+            
+            <div id="mensajeError" class="message error hidden"></div>
+            <div id="mensajeExito" class="message success hidden"></div>
+            
+            <button type="submit" id="submitBtn">
+                <span id="btnLoading" class="loading hidden"></span>
+                <span id="btnText">Ingresar</span>
+            </button>
+            
+            <div class="user-type">
+                ¿Eres estudiante (@edu) o docente (@doc)?
+            </div>
+        </form>
+    </div>
+
+    <script type="module">
+        import { db } from './conexion.js';
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const mensajeError = document.getElementById('mensajeError');
+            const mensajeExito = document.getElementById('mensajeExito');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoading = document.getElementById('btnLoading');
+            
+            mensajeError.textContent = '';
+            mensajeExito.textContent = '';
+            mensajeError.classList.add('hidden');
+            mensajeExito.classList.add('hidden');
+            
+            btnText.textContent = "Verificando...";
+            btnLoading.classList.remove("hidden");
+            submitBtn.disabled = true;
+            
+            try {
+                const correo = formData.get('correo');
+                const password = formData.get('password');
+                
+                if (!correo || !password) {
+                    throw new Error('Todos los campos son obligatorios');
+                }
+                
+                const tipo_usuario = correo.includes('@edu') ? 'estudiante' : 'docente';
+                
+                const usuariosRef = collection(db, "usuarios");
+                const q = query(usuariosRef, where("correo", "==", correo));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    throw new Error('Correo o contraseña incorrectos');
+                }
+                
+                const usuarioDoc = querySnapshot.docs[0];
+                const usuario = usuarioDoc.data();
+                
+                // Verificar contraseña (simplificado)
+                if (usuario.password !== password) {
+                    throw new Error('Correo o contraseña incorrectos');
+                }
+                
+                const userData = {
+                    id: usuarioDoc.id,
+                    nombre: usuario.nombre,
+                    correo: usuario.correo,
+                    telefono: usuario.telefono,
+                    departamento: usuario.departamento,
+                    tipo: tipo_usuario,
+                    carrera: usuario.carrera,
+                    cuatrimestre: usuario.cuatrimestre
+                };
+                
+                mensajeExito.textContent = `¡Bienvenido de nuevo, ${usuario.nombre}!`;
+                mensajeExito.classList.remove('hidden');
+                
+                sessionStorage.setItem('usuario_actual', JSON.stringify(userData));
+                
+                setTimeout(() => {
+                    window.location.href = tipo_usuario === 'estudiante' ? 'student.html' : 'admin.html';
+                }, 1000);
+                
+            } catch (error) {
+                mensajeError.textContent = error.message;
+                mensajeError.classList.remove('hidden');
+            } finally {
+                btnText.textContent = "Ingresar";
+                btnLoading.classList.add("hidden");
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
