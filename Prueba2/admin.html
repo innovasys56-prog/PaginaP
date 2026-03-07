@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal del Docente UTC - Subir Test</title>
+    <link rel="stylesheet" href="styles-admin.css">
+</head>
+<body>
+    <header>
+        <h1>Portal del Docente UTC - Plantel Ecatepec</h1>
+    </header>
+    
+    <div class="container">
+        <div class="profile-header">
+            <div class="profile-picture" id="profilePicture"></div>
+            <h1 id="docenteName">Cargando...</h1>
+            <h3 id="docenteEmail">Correo institucional</h3>
+        </div>
+        
+        <div class="profile-body">
+            <div class="info-docente">
+                <h2>Información del Docente</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Nombre Completo:</span>
+                        <div class="info-value" id="fullName">-</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Tipo de Usuario:</span>
+                        <div class="info-value" id="tipoUsuario">-</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Correo Institucional:</span>
+                        <div class="info-value" id="correoDocente">-</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Departamento:</span>
+                        <div class="info-value" id="departamento">-</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Teléfono:</span>
+                        <div class="info-value" id="telefonoDocente">-</div>
+                    </div>
+                </div>
+                
+                <button class="chat-btn" id="chatBtn">💬 Chat con Comunidad UTC</button>
+            </div>
+            
+            <div class="info-section">
+                <h2>Subir nuevo test</h2>
+                
+                <div id="alertSuccess" class="alert alert-success"></div>
+                <div id="alertError" class="alert alert-error"></div>
+                
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Guardando test, por favor espere...</p>
+                </div>
+                
+                <form id="testForm">
+                    <label for="titulo">Título del test</label>
+                    <input type="text" id="titulo" name="titulo" required minlength="5" maxlength="100">
+                    
+                    <label for="tipoTest">Tipo de test</label>
+                    <select id="tipoTest" name="tipoTest" required>
+                        <option value="">Seleccione un tipo</option>
+                        <option value="academico">Área académica</option>
+                        <option value="iq">Test de IQ</option>
+                        <option value="personalidad">Test de personalidad</option>
+                    </select>
+                    
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" name="descripcion" rows="4" required minlength="10" maxlength="500"></textarea>
+                    
+                    <label for="enlace">Enlace al test (URL)</label>
+                    <input type="url" id="enlace" name="enlace" placeholder="https://ejemplo.com/test" required pattern="https?://.+">
+                    
+                    <input type="hidden" id="profesor" name="profesor">
+                    
+                    <button type="submit" id="submitBtn">Guardar Test</button>
+                </form>
+            </div>
+            
+            <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from './conexion.js';
+        import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
+            
+            if (userData && userData.nombre && userData.correo) {
+                document.getElementById('docenteName').textContent = userData.nombre;
+                document.getElementById('docenteEmail').textContent = userData.correo;
+                document.getElementById('fullName').textContent = userData.nombre;
+                document.getElementById('correoDocente').textContent = userData.correo;
+                document.getElementById('tipoUsuario').textContent = 'Docente';
+                document.getElementById('departamento').textContent = userData.departamento || 'No especificado';
+                document.getElementById('telefonoDocente').textContent = userData.telefono || 'No especificado';
+                document.getElementById('profesor').value = userData.nombre;
+                
+                const initials = userData.nombre.split(' ').map(n => n[0]).join('').toUpperCase();
+                const profilePicture = document.getElementById('profilePicture');
+                profilePicture.innerHTML = `<span style="font-size: 48px; line-height: 120px; color: white;">${initials}</span>`;
+            } else {
+                alert('Por favor inicie sesión primero');
+                window.location.href = 'index.html';
+            }
+            
+            document.getElementById('chatBtn').addEventListener('click', function() {
+                window.location.href = 'chat.html';
+            });
+            
+            document.getElementById('testForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                hideAlerts();
+                showLoading(true);
+                document.getElementById('submitBtn').disabled = true;
+                
+                try {
+                    if (!validateForm()) {
+                        return;
+                    }
+                    
+                    const formData = {
+                        Nombre_Test: document.getElementById('titulo').value.trim(),
+                        tipoTest: document.getElementById('tipoTest').value,
+                        descripcion: document.getElementById('descripcion').value.trim(),
+                        Link: document.getElementById('enlace').value.trim(),
+                        profesor: document.getElementById('profesor').value,
+                        fecha_creacion: new Date().toISOString(),
+                        accesos: 0
+                    };
+                    
+                    const docRef = await addDoc(collection(db, "Tests"), formData);
+                    
+                    showSuccess('Test guardado correctamente con ID: ' + docRef.id);
+                    this.reset();
+                    
+                } catch (error) {
+                    console.error('Error detallado:', error);
+                    showError(error.message || 'Ocurrió un error al guardar el test');
+                } finally {
+                    showLoading(false);
+                    document.getElementById('submitBtn').disabled = false;
+                }
+            });
+            
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                sessionStorage.removeItem('usuario_actual');
+                window.location.href = 'index.html';
+            });
+            
+            function validateForm() {
+                const titulo = document.getElementById('titulo').value.trim();
+                const tipoTest = document.getElementById('tipoTest').value;
+                const descripcion = document.getElementById('descripcion').value.trim();
+                const enlace = document.getElementById('enlace').value.trim();
+                
+                if (!titulo || !tipoTest || !descripcion || !enlace) {
+                    showError('Todos los campos son obligatorios');
+                    return false;
+                }
+                
+                try {
+                    new URL(enlace);
+                } catch (e) {
+                    showError('Por favor ingrese una URL válida (debe comenzar con http:// o https://)');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            function showLoading(show) {
+                document.getElementById('loading').style.display = show ? 'block' : 'none';
+            }
+            
+            function hideAlerts() {
+                document.getElementById('alertSuccess').style.display = 'none';
+                document.getElementById('alertError').style.display = 'none';
+            }
+            
+            function showSuccess(message) {
+                const alert = document.getElementById('alertSuccess');
+                alert.textContent = message;
+                alert.style.display = 'block';
+                setTimeout(() => alert.style.display = 'none', 5000);
+            }
+            
+            function showError(message) {
+                const alert = document.getElementById('alertError');
+                alert.textContent = message;
+                alert.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

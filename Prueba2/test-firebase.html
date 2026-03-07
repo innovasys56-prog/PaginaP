@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Firebase</title>
+</head>
+<body>
+    <h1>Probando conexión a Firebase</h1>
+    <div id="resultado"></div>
+
+    <script type="module">
+        import { db, collection, addDoc, getDocs } from './conexion.js';
+
+        async function testFirebase() {
+            const resultado = document.getElementById('resultado');
+            
+            try {
+                // Intentar escribir un documento de prueba
+                const testRef = await addDoc(collection(db, "test_conexion"), {
+                    mensaje: "Conexión exitosa!",
+                    fecha: new Date().toISOString()
+                });
+                
+                resultado.innerHTML = '✅ ¡Conexión exitosa! ID: ' + testRef.id;
+                
+                // Leer los documentos
+                const querySnapshot = await getDocs(collection(db, "test_conexion"));
+                let docs = [];
+                querySnapshot.forEach((doc) => {
+                    docs.push(doc.data());
+                });
+                
+                console.log("Documentos en test_conexion:", docs);
+                
+            } catch (error) {
+                resultado.innerHTML = '❌ Error: ' + error.message;
+                console.error("Error:", error);
+            }
+        }
+        
+        testFirebase();
+    </script>
+</body>
+</html>

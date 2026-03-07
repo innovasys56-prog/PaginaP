@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles-chat.css">
+    <title>Chat UTC - Comunidad</title>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="users-sidebar">
+            <div class="user-profile" id="userProfile">
+                <h3 id="userName">Cargando...</h3>
+                <p id="userRole">Usuario</p>
+                <div class="user-stats" id="userStats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">Usuarios</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="onlineUsers">0</div>
+                        <div class="stat-label">En línea</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="unreadMessages">0</div>
+                        <div class="stat-label">No leídos</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchUser" placeholder="Buscar usuario...">
+            </div>
+            
+            <div class="users-header">
+                <span>Contactos disponibles</span>
+                <span id="usersCount">0</span>
+            </div>
+            
+            <div class="users-list" id="usersList">
+                <div class="loading-users">
+                    <div class="spinner"></div>
+                    <p>Cargando usuarios...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-main">
+            <div class="chat-header" id="chatHeader" style="display: none;">
+                <div class="chat-header-info">
+                    <h2 id="chatWith">Selecciona un usuario</h2>
+                    <p id="chatStatus">para comenzar a chatear</p>
+                </div>
+                <div class="chat-actions" id="chatActions">
+                    <button class="action-btn video-call-btn" id="videoCallBtn">📹 Videollamada</button>
+                    <button class="action-btn audio-call-btn" id="audioCallBtn">📞 Llamada</button>
+                </div>
+            </div>
+            
+            <div class="messages-area" id="messagesArea">
+                <div class="no-chat-selected">
+                    <h3>👋 ¡Bienvenido al Chat UTC!</h3>
+                    <p>Selecciona un usuario de la lista para comenzar a chatear</p>
+                    <p style="font-size: 48px; margin: 20px;">💬</p>
+                    <button class="back-to-home" id="backToHomeBtn">Volver al Portal</button>
+                </div>
+            </div>
+            
+            <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                <div class="recording-indicator" id="recordingIndicator">
+                    <span class="recording-time" id="recordingTime">0:00</span>
+                    <span>Grabando mensaje de voz...</span>
+                    <div class="recording-controls">
+                        <button class="recording-send" id="sendRecordingBtn">Enviar</button>
+                        <button class="recording-cancel" id="cancelRecordingBtn">Cancelar</button>
+                    </div>
+                </div>
+                
+                <div class="input-container" id="normalInput">
+                    <button class="voice-record-btn" id="recordBtn">🎤</button>
+                    <button class="attach-btn" id="attachBtn">📎</button>
+                    <input type="text" class="message-input" id="messageInput" placeholder="Escribe un mensaje...">
+                    <button class="send-btn" id="sendBtn">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from './conexion.js';
+        import { collection, query, where, getDocs, addDoc, onSnapshot, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        let currentUser = null;
+        let selectedUserId = null;
+        let selectedUserName = '';
+        let allUsers = [];
+        let unsubscribeMessages = null;
+        
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingStartTime = null;
+        let recordingTimer = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
+            
+            if (!userData) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = userData;
+            
+            document.getElementById('userName').textContent = userData.nombre;
+            document.getElementById('userRole').textContent = 
+                userData.tipo === 'estudiante' ? 'Estudiante' : 'Docente';
+            
+            loadUsers();
+            
+            document.getElementById('searchUser').addEventListener('input', filterUsers);
+            document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
+            document.getElementById('audioCallBtn').addEventListener('click', startAudioCall);
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+            document.getElementById('recordBtn').addEventListener('click', startRecording);
+            document.getElementById('sendRecordingBtn').addEventListener('click', stopAndSendRecording);
+            document.getElementById('cancelRecordingBtn').addEventListener('click', cancelRecording);
+            document.getElementById('attachBtn').addEventListener('click', attachFile);
+            document.getElementById('backToHomeBtn').addEventListener('click', function() {
+                window.location.href = currentUser.tipo === 'estudiante' ? 'student.html' : 'admin.html';
+            });
+        });
+        
+        async function loadUsers() {
+            try {
+                const usuariosRef = collection(db, "usuarios");
+                const q = query(usuariosRef, where("id", "!=", currentUser.id));
+                const querySnapshot = await getDocs(q);
+                
+                allUsers = [];
+                querySnapshot.forEach((doc) => {
+                    allUsers.push({ id: doc.id, ...doc.data() });
+                });
+                
+                document.getElementById('totalUsers').textContent = allUsers.length;
+                
+                const totalUnread = 0; // Simplificado
+                document.getElementById('unreadMessages').textContent = totalUnread;
+                
+                displayUsers(allUsers);
+                
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+                document.getElementById('usersList').innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #f44336;">
+                        Error al cargar usuarios. 
+                        <button onclick="window.location.reload()" style="margin-top: 10px; padding: 5px 15px;">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayUsers(users) {
+            const usersList = document.getElementById('usersList');
+            document.getElementById('usersCount').textContent = users.length;
+            
+            if (users.length === 0) {
+                usersList.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #999;">
+                        No hay otros usuarios disponibles
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            const docentes = users.filter(u => u.tipo_usuario === 'docente');
+            const estudiantes = users.filter(u => u.tipo_usuario === 'estudiante');
+            
+            if (docentes.length > 0) {
+                html += `<div style="padding: 10px 15px; background: #e9ecef; font-weight: 600;">👨‍🏫 Docentes (${docentes.length})</div>`;
+                docentes.forEach(user => {
+                    html += createUserItem(user);
+                });
+            }
+            
+            if (estudiantes.length > 0) {
+                html += `<div style="padding: 10px 15px; background: #e9ecef; font-weight: 600; margin-top: 5px;">👨‍🎓 Estudiantes (${estudiantes.length})</div>`;
+                estudiantes.forEach(user => {
+                    html += createUserItem(user);
+                });
+            }
+            
+            usersList.innerHTML = html;
+            
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    selectUser(this.dataset.id, this.dataset.name, this.dataset.role, this.dataset.specialty);
+                });
+            });
+        }
+        
+        function createUserItem(user) {
+            const isSelected = selectedUserId === user.id ? 'active' : '';
+            const unreadBadge = ''; // Simplificado
+            
+            const statusClass = 'status-offline';
+            const roleClass = user.tipo_usuario === 'docente' ? 'role-docente' : 'role-estudiante';
+            
+            const iniciales = user.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            
+            const especialidad = user.tipo_usuario === 'estudiante' ? user.carrera : user.departamento;
+            
+            return `
+                <div class="user-item ${isSelected}" 
+                     data-id="${user.id}" 
+                     data-name="${user.nombre}" 
+                     data-role="${user.tipo_usuario === 'docente' ? 'Docente' : 'Estudiante'}" 
+                     data-specialty="${especialidad || 'No especificado'}">
+                    <div class="user-avatar">
+                        ${iniciales || '👤'}
+                        <span class="user-status ${statusClass}"></span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">
+                            ${user.nombre}
+                            <span class="user-role-badge ${roleClass}">${user.tipo_usuario === 'docente' ? 'Docente' : 'Estudiante'}</span>
+                        </div>
+                        <div class="user-detail">
+                            <span>${especialidad || 'No especificado'}</span>
+                            ${unreadBadge}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function filterUsers() {
+            const searchTerm = document.getElementById('searchUser').value.toLowerCase();
+            
+            if (!searchTerm) {
+                displayUsers(allUsers);
+                return;
+            }
+            
+            const filtered = allUsers.filter(user => 
+                user.nombre.toLowerCase().includes(searchTerm) ||
+                (user.carrera && user.carrera.toLowerCase().includes(searchTerm)) ||
+                (user.departamento && user.departamento.toLowerCase().includes(searchTerm))
+            );
+            
+            displayUsers(filtered);
+        }
+        
+        function selectUser(userId, userName, userRole, userSpecialty) {
+            selectedUserId = userId;
+            selectedUserName = userName;
+            
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('chatInputArea').style.display = 'block';
+            document.getElementById('chatWith').textContent = userName;
+            document.getElementById('chatStatus').textContent = `${userRole} • ${userSpecialty}`;
+            
+            document.querySelector('.no-chat-selected').style.display = 'none';
+            
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.id === userId) {
+                    item.classList.add('active');
+                }
+            });
+            
+            loadMessages();
+        }
+        
+        function loadMessages() {
+            if (!selectedUserId) return;
+            
+            if (unsubscribeMessages) {
+                unsubscribeMessages();
+            }
+            
+            const mensajesRef = collection(db, "mensajes");
+            const q = query(
+                mensajesRef,
+                where("id_remitente", "in", [currentUser.id, selectedUserId]),
+                where("id_destinatario", "in", [currentUser.id, selectedUserId]),
+                orderBy("fecha_envio", "asc")
+            );
+            
+            unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
+                const messages = [];
+                querySnapshot.forEach((doc) => {
+                    messages.push({ id: doc.id, ...doc.data() });
+                });
+                displayMessages(messages);
+            });
+        }
+        
+        function displayMessages(messages) {
+            const messagesArea = document.getElementById('messagesArea');
+            
+            if (!messages || messages.length === 0) {
+                messagesArea.innerHTML = `
+                    <div style="text-align: center; color: #999; margin-top: 50px;">
+                        <p>No hay mensajes con ${selectedUserName}</p>
+                        <p>¡Envía el primer mensaje!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            let lastDate = '';
+            
+            messages.forEach(msg => {
+                const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
+                
+                if (msgDate !== lastDate) {
+                    html += `
+                        <div class="date-separator">
+                            <span>${msgDate}</span>
+                        </div>
+                    `;
+                    lastDate = msgDate;
+                }
+                
+                const messageClass = msg.id_remitente == currentUser.id ? 'sent' : 'received';
+                
+                if (msg.tipo_mensaje === 'texto') {
+                    html += `
+                        <div class="message ${messageClass}">
+                            <div class="message-content">${msg.mensaje}</div>
+                            <div class="message-time">${new Date(msg.fecha_envio).toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            messagesArea.innerHTML = html;
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !selectedUserId) return;
+            
+            try {
+                await addDoc(collection(db, "mensajes"), {
+                    id_remitente: currentUser.id,
+                    id_destinatario: selectedUserId,
+                    mensaje: message,
+                    tipo_mensaje: 'texto',
+                    fecha_envio: new Date().toISOString(),
+                    leido: false
+                });
+                
+                input.value = '';
+                
+            } catch (error) {
+                console.error('Error enviando mensaje:', error);
+                alert('Error al enviar el mensaje');
+            }
+        }
+        
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start();
+                
+                document.getElementById('normalInput').style.display = 'none';
+                document.getElementById('recordingIndicator').classList.add('active');
+                document.getElementById('recordBtn').classList.add('recording');
+                
+                recordingStartTime = Date.now();
+                updateRecordingTime();
+                recordingTimer = setInterval(updateRecordingTime, 1000);
+                
+            } catch (error) {
+                console.error('Error accediendo al micrófono:', error);
+                alert('No se pudo acceder al micrófono. Verifica los permisos.');
+            }
+        }
+        
+        function updateRecordingTime() {
+            if (!recordingStartTime) return;
+            
+            const seconds = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            
+            document.getElementById('recordingTime').textContent = 
+                `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        async function stopAndSendRecording() {
+            if (!mediaRecorder || !selectedUserId) return;
+            
+            clearInterval(recordingTimer);
+            
+            mediaRecorder.addEventListener('stop', async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                
+                alert('Funcionalidad de audio - Pendiente implementación');
+                
+                document.getElementById('normalInput').style.display = 'flex';
+                document.getElementById('recordingIndicator').classList.remove('active');
+                document.getElementById('recordBtn').classList.remove('recording');
+                recordingStartTime = null;
+            });
+            
+            mediaRecorder.stop();
+        }
+        
+        function cancelRecording() {
+            clearInterval(recordingTimer);
+            mediaRecorder.stop();
+            
+            document.getElementById('normalInput').style.display = 'flex';
+            document.getElementById('recordingIndicator').classList.remove('active');
+            document.getElementById('recordBtn').classList.remove('recording');
+            recordingStartTime = null;
+        }
+        
+        function attachFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf,.doc,.docx,.jpg,.png,.txt';
+            
+            input.onchange = function() {
+                const file = this.files[0];
+                if (!file || !selectedUserId) return;
+                
+                alert('Funcionalidad de archivos - Pendiente implementación');
+            };
+            
+            input.click();
+        }
+        
+        function startVideoCall() {
+            if (!selectedUserId) {
+                alert('Selecciona un usuario para llamar');
+                return;
+            }
+            
+            alert('Funcionalidad de videollamada - Pendiente implementación');
+        }
+        
+        function startAudioCall() {
+            if (!selectedUserId) {
+                alert('Selecciona un usuario para llamar');
+                return;
+            }
+            
+            alert('Funcionalidad de llamada de audio - Pendiente implementación');
+        }
+        
+        window.addEventListener('beforeunload', function() {
+            if (unsubscribeMessages) {
+                unsubscribeMessages();
+            }
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+            }
+        });
+    </script>
+</body>
+</html>
