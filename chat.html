@@ -134,33 +134,38 @@
         });
         
         async function loadUsers() {
-            try {
-                const usuariosRef = collection(db, "usuarios");
-                const q = query(usuariosRef, where("id", "!=", currentUser.id));
-                const querySnapshot = await getDocs(q);
-                
-                allUsers = [];
-                querySnapshot.forEach((doc) => {
-                    allUsers.push({ id: doc.id, ...doc.data() });
+    try {
+        const usuariosRef = collection(db, "usuarios");
+        const querySnapshot = await getDocs(usuariosRef); // QUITAR el where
+        
+        allUsers = [];
+        querySnapshot.forEach((doc) => {
+            // Solo agregar si NO es el usuario actual
+            if (doc.id !== currentUser.id) {
+                allUsers.push({ 
+                    id: doc.id,  // El ID viene del documento, no de los datos
+                    ...doc.data() 
                 });
-                
-                document.getElementById('totalUsers').textContent = allUsers.length;
-                
-                const totalUnread = 0; // Simplificado
-                document.getElementById('unreadMessages').textContent = totalUnread;
-                
-                displayUsers(allUsers);
-                
-            } catch (error) {
-                console.error('Error cargando usuarios:', error);
-                document.getElementById('usersList').innerHTML = `
-                    <div style="padding: 20px; text-align: center; color: #f44336;">
-                        Error al cargar usuarios. 
-                        <button onclick="window.location.reload()" style="margin-top: 10px; padding: 5px 15px;">Reintentar</button>
-                    </div>
-                `;
             }
-        }
+        });
+        
+        document.getElementById('totalUsers').textContent = allUsers.length;
+        
+        // Calcular mensajes no leídos (simplificado por ahora)
+        document.getElementById('unreadMessages').textContent = 0;
+        
+        displayUsers(allUsers);
+        
+    } catch (error) {
+        console.error('Error cargando usuarios:', error);
+        document.getElementById('usersList').innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #f44336;">
+                Error al cargar usuarios: ${error.message}
+                <button onclick="window.location.reload()" style="margin-top: 10px; padding: 5px 15px;">Reintentar</button>
+            </div>
+        `;
+    }
+}
         
         function displayUsers(users) {
             const usersList = document.getElementById('usersList');
@@ -300,73 +305,85 @@
             });
         }
         
-        function displayMessages(messages) {
-            const messagesArea = document.getElementById('messagesArea');
-            
-            if (!messages || messages.length === 0) {
-                messagesArea.innerHTML = `
-                    <div style="text-align: center; color: #999; margin-top: 50px;">
-                        <p>No hay mensajes con ${selectedUserName}</p>
-                        <p>¡Envía el primer mensaje!</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            let lastDate = '';
-            
-            messages.forEach(msg => {
-                const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
-                
-                if (msgDate !== lastDate) {
-                    html += `
-                        <div class="date-separator">
-                            <span>${msgDate}</span>
-                        </div>
-                    `;
-                    lastDate = msgDate;
-                }
-                
-                const messageClass = msg.id_remitente == currentUser.id ? 'sent' : 'received';
-                
-                if (msg.tipo_mensaje === 'texto') {
-                    html += `
-                        <div class="message ${messageClass}">
-                            <div class="message-content">${msg.mensaje}</div>
-                            <div class="message-time">${new Date(msg.fecha_envio).toLocaleTimeString()}</div>
-                        </div>
-                    `;
-                }
-            });
-            
-            messagesArea.innerHTML = html;
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+ function displayMessages(messages) {
+    const messagesArea = document.getElementById('messagesArea');
+    
+    if (!messages || messages.length === 0) {
+        messagesArea.innerHTML = `
+            <div style="text-align: center; color: #999; margin-top: 50px;">
+                <p>No hay mensajes con ${selectedUserName}</p>
+                <p>¡Envía el primer mensaje!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    console.log("Mostrando mensajes:", messages); // Para debug
+    
+    let html = '';
+    let lastDate = '';
+    
+    messages.forEach(msg => {
+        const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
+        
+        // Agregar separador de fecha si cambia
+        if (msgDate !== lastDate) {
+            html += `
+                <div class="date-separator">
+                    <span>${msgDate}</span>
+                </div>
+            `;
+            lastDate = msgDate;
         }
         
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            
-            if (!message || !selectedUserId) return;
-            
-            try {
-                await addDoc(collection(db, "mensajes"), {
-                    id_remitente: currentUser.id,
-                    id_destinatario: selectedUserId,
-                    mensaje: message,
-                    tipo_mensaje: 'texto',
-                    fecha_envio: new Date().toISOString(),
-                    leido: false
-                });
-                
-                input.value = '';
-                
-            } catch (error) {
-                console.error('Error enviando mensaje:', error);
-                alert('Error al enviar el mensaje');
-            }
-        }
+        // Determinar si el mensaje es enviado o recibido
+        const messageClass = msg.id_remitente === currentUser.id ? 'sent' : 'received';
+        
+        // Mostrar el mensaje (asumimos que es texto)
+        html += `
+            <div class="message ${messageClass}">
+                <div class="message-content">${msg.mensaje}</div>
+                <div class="message-time">${new Date(msg.fecha_envio).toLocaleTimeString()}</div>
+            </div>
+        `;
+    });
+    
+    messagesArea.innerHTML = html;
+    
+    // Scroll automático al último mensaje
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+        
+  async function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if (!message || !selectedUserId) {
+        alert('Selecciona un usuario y escribe un mensaje');
+        return;
+    }
+    
+    try {
+        console.log("Enviando mensaje:", message);
+        console.log("De:", currentUser.id, "Para:", selectedUserId);
+        
+        await addDoc(collection(db, "mensajes"), {
+            id_remitente: currentUser.id,
+            id_destinatario: selectedUserId,
+            mensaje: message,
+            tipo_mensaje: 'texto',
+            fecha_envio: new Date().toISOString(),
+            leido: false
+        });
+        
+        console.log("Mensaje enviado correctamente");
+        input.value = ''; // Limpiar input
+        
+    } catch (error) {
+        console.error('Error enviando mensaje:', error);
+        alert('Error al enviar: ' + error.message);
+    }
+}
         
         async function startRecording() {
             try {
