@@ -32,12 +32,7 @@
                     <option value="Ingeniería en Sistemas">Ingeniería en Sistemas</option>
                     <option value="Administración">Administración</option>
                     <option value="Derecho">Derecho</option>
-                    <option value="Criminología">Criminología</option>
-                    <option value="Psicología">Psicología</option>
-                    <option value="Turismo">Turismo</option>
-                    <option value="Diseño Gráfico">Diseño Gráfico</option>
-                    <option value="Pedagogía">Pedagogía</option>
-                    <option value="Comercio">Comercio</option>
+                    <option value="Medicina">Medicina</option>
                 </select>
 
                 <label for="cuatrimestre">Cuatrimestre:</label>
@@ -48,10 +43,6 @@
                     <option value="3">3° Cuatrimestre</option>
                     <option value="4">4° Cuatrimestre</option>
                     <option value="5">5° Cuatrimestre</option>
-                    <option value="6">6° Cuatrimestre</option>
-                    <option value="7">7° Cuatrimestre</option>
-                    <option value="8">8° Cuatrimestre</option>
-                    <option value="9">9° Cuatrimestre</option>
                 </select>
             </div>
 
@@ -59,59 +50,96 @@
                 <label for="departamento">Departamento:</label>
                 <select id="departamento" name="departamento">
                     <option value="">Selecciona tu departamento</option>
-                    <option value="Psicología Clínica">Psicología Clínica</option>
-                    <option value="Psicología Educativa">Psicología Educativa</option>
-                    <option value="Orientación">Orientación</option>
+                    <option value="Ciencias Básicas">Ciencias Básicas</option>
+                    <option value="Ingenierías">Ingenierías</option>
+                    <option value="Humanidades">Humanidades</option>
                 </select>
+
+                <label for="especialidad">Especialidad:</label>
+                <input type="text" id="especialidad" name="especialidad">
+
+                <label for="clave_docente">Clave de Docente:</label>
+                <input type="password" id="clave_docente" name="clave_docente">
+                <div class="info-text">Clave proporcionada por la institución</div>
             </div>
 
+            <div id="mensajeError" class="error"></div>
+
             <button type="submit">Registrarse</button>
-            <div id="mensajeError" class="error hidden"></div>
         </form>
     </div>
 
     <script type="module">
-        import { db } from './firebase-config.js';
+        import { db } from './conexion.js';
         import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const correoInput = document.getElementById('correo');
-        const seccionEstudiante = document.getElementById('seccionEstudiante');
-        const seccionDocente = document.getElementById('seccionDocente');
-        const mensajeTipoUsuario = document.getElementById('mensajeTipoUsuario');
-        let tipo_usuario = '';
-
-        correoInput.addEventListener('input', (e) => {
-            const correo = e.target.value;
-            seccionEstudiante.classList.add('hidden');
-            seccionDocente.classList.add('hidden');
-            mensajeTipoUsuario.classList.add('hidden');
-
-            if(correo.includes('@edu')) {
-                seccionEstudiante.classList.remove('hidden');
-                mensajeTipoUsuario.textContent = 'Registro como Estudiante';
-                mensajeTipoUsuario.classList.remove('hidden');
-                tipo_usuario = 'estudiante';
-            } else if(correo.includes('@doc')) {
-                seccionDocente.classList.remove('hidden');
-                mensajeTipoUsuario.textContent = 'Registro como Docente / Psicólogo';
-                mensajeTipoUsuario.classList.remove('hidden');
-                tipo_usuario = 'docente';
+        document.getElementById('correo').addEventListener('blur', function() {
+            const correo = this.value.toLowerCase();
+            const seccionEstudiante = document.getElementById("seccionEstudiante");
+            const seccionDocente = document.getElementById("seccionDocente");
+            const mensajeTipo = document.getElementById("mensajeTipoUsuario");
+            
+            mensajeTipo.classList.add("hidden");
+            seccionEstudiante.classList.add("hidden");
+            seccionDocente.classList.add("hidden");
+            
+            if (!correo.includes("@")) return;
+            
+            if (correo.includes("@edu")) {
+                mensajeTipo.textContent = "Se ha detectado que eres estudiante. Por favor completa tu información académica.";
+                mensajeTipo.classList.remove("hidden");
+                seccionEstudiante.classList.remove("hidden");
+            } else if (correo.includes("@doc")) {
+                mensajeTipo.textContent = "Se ha detectado que eres docente. Por favor completa tu información profesional.";
+                mensajeTipo.classList.remove("hidden");
+                seccionDocente.classList.remove("hidden");
             }
         });
 
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            const correo = document.getElementById('correo').value.toLowerCase();
             const mensajeError = document.getElementById('mensajeError');
-            mensajeError.classList.add('hidden');
-            const correo = correoInput.value;
-
+            mensajeError.textContent = '';
+            
+            if (!correo.includes("@edu") && !correo.includes("@doc")) {
+                mensajeError.textContent = 'Debes usar un correo institucional válido (@edu o @doc)';
+                return;
+            }
+            
+            if (document.getElementById('password').value.length < 8) {
+                mensajeError.textContent = 'La contraseña debe tener al menos 8 caracteres';
+                return;
+            }
+            
+            const tipo_usuario = correo.includes("@edu") ? 'estudiante' : 'docente';
+            
+            if (tipo_usuario === 'estudiante') {
+                if (!document.getElementById('carrera').value || !document.getElementById('cuatrimestre').value) {
+                    mensajeError.textContent = 'Debes seleccionar una carrera y cuatrimestre';
+                    return;
+                }
+            }
+            
+            if (tipo_usuario === 'docente') {
+                if (!document.getElementById('departamento').value) {
+                    mensajeError.textContent = 'Debes seleccionar un departamento';
+                    return;
+                }
+                if (document.getElementById('clave_docente').value !== "claveDocente2025") {
+                    mensajeError.textContent = 'Clave de docente incorrecta';
+                    return;
+                }
+            }
+            
             try {
-                const q = query(collection(db, "usuarios"), where("correo", "==", correo));
+                const usuariosRef = collection(db, "usuarios");
+                const q = query(usuariosRef, where("correo", "==", correo));
                 const querySnapshot = await getDocs(q);
                 
                 if (!querySnapshot.empty) {
                     mensajeError.textContent = 'Este correo ya está registrado';
-                    mensajeError.classList.remove('hidden');
                     return;
                 }
                 
@@ -124,6 +152,7 @@
                     carrera: document.getElementById('carrera')?.value || null,
                     cuatrimestre: document.getElementById('cuatrimestre')?.value || null,
                     departamento: document.getElementById('departamento')?.value || null,
+                    especialidad: document.getElementById('especialidad')?.value || null,
                     fecha_registro: new Date().toISOString()
                 };
                 
@@ -134,10 +163,8 @@
                 
             } catch (error) {
                 mensajeError.textContent = 'Error al registrar: ' + error.message;
-                mensajeError.classList.remove('hidden');
             }
         });
     </script>
 </body>
 </html>
-
