@@ -316,7 +316,7 @@
         return;
     }
     
-    console.log("Mostrando mensajes:", messages); // Para debug
+    console.log("Mostrando mensajes:", messages);
     
     let html = '';
     let lastDate = '';
@@ -324,7 +324,6 @@
     messages.forEach(msg => {
         const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
         
-        // Agregar separador de fecha si cambia
         if (msgDate !== lastDate) {
             html += `
                 <div class="date-separator">
@@ -334,10 +333,7 @@
             lastDate = msgDate;
         }
         
-        // Determinar si el mensaje es enviado o recibido
         const messageClass = msg.id_remitente === currentUser.id ? 'sent' : 'received';
-        
-        // Mostrar el mensaje (asumimos que es texto)
         html += `
             <div class="message ${messageClass}">
                 <div class="message-content">${msg.mensaje}</div>
@@ -347,8 +343,6 @@
     });
     
     messagesArea.innerHTML = html;
-    
-    // Scroll automático al último mensaje
     messagesArea.scrollTop = messagesArea.scrollHeight;
 }
         
@@ -499,3 +493,4 @@
 </body>
 
 </html>
+
