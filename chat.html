@@ -86,7 +86,6 @@
         </div>
     </div>
 
-    <!-- Contenedor para videollamada -->
     <div id="videoCallContainer">
         <div class="video-wrapper">
             <video id="remoteVideo" autoplay playsinline></video>
@@ -310,6 +309,7 @@
             displayUsers(filtered);
         }
         
+        // --- FUNCIÓN CORREGIDA ---
         function selectUser(userId, userName, userRole, userSpecialty) {
             selectedUserId = userId;
             selectedUserName = userName;
@@ -319,7 +319,11 @@
             document.getElementById('chatWith').textContent = userName;
             document.getElementById('chatStatus').textContent = `${userRole} • ${userSpecialty}`;
             
-            document.querySelector('.no-chat-selected').style.display = 'none';
+            // Verificamos si el elemento existe antes de ocultarlo
+            const noChatWelcome = document.querySelector('.no-chat-selected');
+            if (noChatWelcome) {
+                noChatWelcome.style.display = 'none';
+            }
             
             document.querySelectorAll('.user-item').forEach(item => {
                 item.classList.remove('active');
@@ -521,7 +525,6 @@
             try {
                 console.log("Iniciando llamada de tipo:", callType);
                 
-                // Obtener stream local
                 const constraints = {
                     audio: true,
                     video: callType === 'video'
@@ -529,15 +532,12 @@
                 
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
                 
-                // Mostrar video local
                 const localVideo = document.getElementById('localVideo');
                 localVideo.srcObject = localStream;
                 
-                // Crear ID único para la sala
                 const roomId = `${currentUser.id}_${selectedUserId}_${Date.now()}`;
                 currentCallRoomId = roomId;
                 
-                // Crear documento de llamada en Firestore
                 await addDoc(collection(db, "calls"), {
                     callerId: currentUser.id,
                     callerName: currentUser.nombre,
@@ -548,7 +548,6 @@
                     roomId: roomId
                 });
                 
-                // Crear sala de señalización
                 const roomRef = doc(db, "rooms", roomId);
                 await setDoc(roomRef, {
                     callerId: currentUser.id,
@@ -557,14 +556,11 @@
                     createdAt: new Date().toISOString()
                 });
                 
-                // Crear conexión peer
                 await createPeerConnection(roomRef, true);
                 
-                // Crear oferta
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
                 
-                // Guardar oferta
                 await updateDoc(roomRef, {
                     offer: {
                         type: offer.type,
@@ -572,10 +568,8 @@
                     }
                 });
                 
-                // Mostrar contenedor de videollamada
                 document.getElementById('videoCallContainer').style.display = 'block';
                 
-                // Escuchar respuesta
                 unsubscribeCall = onSnapshot(roomRef, async (snapshot) => {
                     const data = snapshot.data();
                     
@@ -600,18 +594,15 @@
         async function createPeerConnection(roomRef, isCaller) {
             peerConnection = new RTCPeerConnection(iceServers);
             
-            // Agregar tracks locales
             localStream.getTracks().forEach(track => {
                 peerConnection.addTrack(track, localStream);
             });
             
-            // Mostrar video remoto
             peerConnection.ontrack = (event) => {
                 const remoteVideo = document.getElementById('remoteVideo');
                 remoteVideo.srcObject = event.streams[0];
             };
             
-            // Manejar candidatos ICE
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     const candidateRef = collection(
@@ -622,7 +613,6 @@
                 }
             };
             
-            // Escuchar candidatos de la otra parte
             const remoteCandidatesRef = collection(
                 roomRef, 
                 isCaller ? "calleeCandidates" : "callerCandidates"
@@ -637,7 +627,6 @@
                 });
             });
             
-            // Manejar cambios de estado
             peerConnection.onconnectionstatechange = () => {
                 if (peerConnection.connectionState === 'disconnected' || 
                     peerConnection.connectionState === 'failed' ||
@@ -668,7 +657,6 @@
         function showIncomingCallDialog(call, callId) {
             const callType = call.callType === 'video' ? '📹 videollamada' : '📞 llamada de audio';
             
-            // Crear diálogo
             const dialog = document.createElement('div');
             dialog.className = 'incoming-call-dialog';
             dialog.innerHTML = `
@@ -680,19 +668,16 @@
             
             document.body.appendChild(dialog);
             
-            // Manejar aceptar
             dialog.querySelector('.accept').onclick = async () => {
                 dialog.remove();
                 await acceptCall(call, callId);
             };
             
-            // Manejar rechazar
             dialog.querySelector('.reject').onclick = async () => {
                 dialog.remove();
                 await rejectCall(callId);
             };
             
-            // Auto-rechazar después de 30 segundos
             setTimeout(() => {
                 if (document.body.contains(dialog)) {
                     dialog.remove();
@@ -703,7 +688,6 @@
         
         async function acceptCall(call, callId) {
             try {
-                // Obtener stream local
                 const constraints = {
                     audio: true,
                     video: call.callType === 'video'
@@ -711,36 +695,28 @@
                 
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
                 
-                // Mostrar video local
                 const localVideo = document.getElementById('localVideo');
                 localVideo.srcObject = localStream;
                 
-                // Referencia a la sala
                 const roomRef = doc(db, "rooms", call.roomId);
                 currentCallRoomId = call.roomId;
                 
-                // Actualizar estado de la llamada
                 await updateDoc(doc(db, "calls", callId), {
                     status: 'accepted',
                     acceptedAt: new Date().toISOString()
                 });
                 
-                // Obtener la oferta
                 const roomSnapshot = await getDoc(roomRef);
                 const roomData = roomSnapshot.data();
                 
-                // Crear conexión peer
                 await createPeerConnection(roomRef, false);
                 
-                // Establecer descripción remota
                 const offer = new RTCSessionDescription(roomData.offer);
                 await peerConnection.setRemoteDescription(offer);
                 
-                // Crear respuesta
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
                 
-                // Guardar respuesta
                 await updateDoc(roomRef, {
                     answer: {
                         type: answer.type,
@@ -749,7 +725,6 @@
                     status: 'active'
                 });
                 
-                // Mostrar contenedor
                 document.getElementById('videoCallContainer').style.display = 'block';
                 
             } catch (error) {
@@ -771,19 +746,16 @@
         
         async function endCall() {
             try {
-                // Detener streams
                 if (localStream) {
                     localStream.getTracks().forEach(track => track.stop());
                     localStream = null;
                 }
                 
-                // Cerrar conexión peer
                 if (peerConnection) {
                     peerConnection.close();
                     peerConnection = null;
                 }
                 
-                // Unsubscribe
                 if (unsubscribeCall) {
                     unsubscribeCall();
                     unsubscribeCall = null;
@@ -794,7 +766,6 @@
                     unsubscribeIceCandidates = null;
                 }
                 
-                // Actualizar estado en Firestore
                 if (currentCallRoomId) {
                     await updateDoc(doc(db, "rooms", currentCallRoomId), {
                         status: 'ended',
@@ -802,10 +773,7 @@
                     });
                 }
                 
-                // Ocultar contenedor
                 document.getElementById('videoCallContainer').style.display = 'none';
-                
-                // Limpiar videos
                 document.getElementById('localVideo').srcObject = null;
                 document.getElementById('remoteVideo').srcObject = null;
                 
@@ -844,20 +812,11 @@
         }
         
         window.addEventListener('beforeunload', function() {
-            if (unsubscribeMessages) {
-                unsubscribeMessages();
-            }
-            if (recordingTimer) {
-                clearInterval(recordingTimer);
-            }
-            if (unsubscribeCall) {
-                unsubscribeCall();
-            }
-            if (unsubscribeIceCandidates) {
-                unsubscribeIceCandidates();
-            }
+            if (unsubscribeMessages) unsubscribeMessages();
+            if (recordingTimer) clearInterval(recordingTimer);
+            if (unsubscribeCall) unsubscribeCall();
+            if (unsubscribeIceCandidates) unsubscribeIceCandidates();
         });
     </script>
 </body>
 </html>
-
