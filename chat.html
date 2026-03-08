@@ -83,13 +83,36 @@
                     <button class="send-btn" id="sendBtn">➤</button>
                 </div>
             </div>
+
+            <div class="video-call-container" id="videoCallContainer" style="display: none;">
+                <div class="video-streams">
+                    <video id="remoteVideo" autoplay playsinline></video>
+                    <video id="localVideo" autoplay playsinline muted></video>
+                </div>
+                <div class="video-controls">
+                    <button class="control-btn hangup-btn" id="hangupBtn">📞 Colgar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="incoming-call-modal" id="incomingCallModal" style="display: none;">
+        <div class="incoming-call-content">
+            <div class="caller-avatar">👤</div>
+            <h3 id="callerNameText">Alguien te está llamando...</h3>
+            <p>Videollamada entrante</p>
+            <div class="incoming-call-actions">
+                <button class="call-btn accept-btn" id="acceptCallBtn">📞 Contestar</button>
+                <button class="call-btn reject-btn" id="rejectCallBtn">✖ Rechazar</button>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { db } from './conexion.js';
-        import { collection, query, where, getDocs, addDoc, onSnapshot, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { collection, query, where, getDocs, addDoc, onSnapshot, orderBy, updateDoc, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Variables Globales
         let currentUser = null;
         let selectedUserId = null;
         let selectedUserName = '';
@@ -100,6 +123,18 @@
         let audioChunks = [];
         let recordingStartTime = null;
         let recordingTimer = null;
+
+        // Variables Globales WebRTC
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let callDocRef = null; 
+        let currentCallDocId = null;
+        const servers = {
+            iceServers: [
+                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+            ]
+        };
         
         document.addEventListener('DOMContentLoaded', function() {
             const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
@@ -116,10 +151,9 @@
                 userData.tipo === 'estudiante' ? 'Estudiante' : 'Docente';
             
             loadUsers();
+            listenForIncomingCalls();
             
             document.getElementById('searchUser').addEventListener('input', filterUsers);
-            document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
-            document.getElementById('audioCallBtn').addEventListener('click', startAudioCall);
             document.getElementById('sendBtn').addEventListener('click', sendMessage);
             document.getElementById('messageInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') sendMessage();
@@ -131,39 +165,51 @@
             document.getElementById('backToHomeBtn').addEventListener('click', function() {
                 window.location.href = currentUser.tipo === 'estudiante' ? 'student.html' : 'admin.html';
             });
+
+            // Botones de llamada
+            document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
+            document.getElementById('audioCallBtn').addEventListener('click', () => alert('Funcionalidad de llamada de audio - Pendiente implementación'));
+            document.getElementById('hangupBtn').addEventListener('click', hangup);
+            document.getElementById('acceptCallBtn').addEventListener('click', answerCall);
+            document.getElementById('rejectCallBtn').addEventListener('click', async () => {
+                document.getElementById('incomingCallModal').style.display = 'none';
+                if (currentCallDocId) {
+                    await deleteDoc(doc(db, 'llamadas', currentCallDocId));
+                    currentCallDocId = null;
+                }
+            });
         });
         
         async function loadUsers() {
-    try {
-        const usuariosRef = collection(db, "usuarios");
-        const querySnapshot = await getDocs(usuariosRef);
-        
-        allUsers = [];
-        querySnapshot.forEach((doc) => {
-            if (doc.id !== currentUser.id) {
-                allUsers.push({ 
-                    id: doc.id,
-                    ...doc.data() 
+            try {
+                const usuariosRef = collection(db, "usuarios");
+                const querySnapshot = await getDocs(usuariosRef);
+                
+                allUsers = [];
+                querySnapshot.forEach((doc) => {
+                    if (doc.id !== currentUser.id) {
+                        allUsers.push({ 
+                            id: doc.id,
+                            ...doc.data() 
+                        });
+                    }
                 });
+                
+                document.getElementById('totalUsers').textContent = allUsers.length;
+                document.getElementById('unreadMessages').textContent = 0;
+                
+                displayUsers(allUsers);
+                
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+                document.getElementById('usersList').innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #f44336;">
+                        Error al cargar usuarios: ${error.message}
+                        <button onclick="window.location.reload()" style="margin-top: 10px; padding: 5px 15px;">Reintentar</button>
+                    </div>
+                `;
             }
-        });
-        
-        document.getElementById('totalUsers').textContent = allUsers.length;
-        
-        document.getElementById('unreadMessages').textContent = 0;
-        
-        displayUsers(allUsers);
-        
-    } catch (error) {
-        console.error('Error cargando usuarios:', error);
-        document.getElementById('usersList').innerHTML = `
-            <div style="padding: 20px; text-align: center; color: #f44336;">
-                Error al cargar usuarios: ${error.message}
-                <button onclick="window.location.reload()" style="margin-top: 10px; padding: 5px 15px;">Reintentar</button>
-            </div>
-        `;
-    }
-}
+        }
         
         function displayUsers(users) {
             const usersList = document.getElementById('usersList');
@@ -208,7 +254,7 @@
         
         function createUserItem(user) {
             const isSelected = selectedUserId === user.id ? 'active' : '';
-            const unreadBadge = ''; // Simplificado
+            const unreadBadge = '';
             
             const statusClass = 'status-offline';
             const roleClass = user.tipo_usuario === 'docente' ? 'role-docente' : 'role-estudiante';
@@ -303,79 +349,75 @@
             });
         }
         
- function displayMessages(messages) {
-    const messagesArea = document.getElementById('messagesArea');
-    
-    if (!messages || messages.length === 0) {
-        messagesArea.innerHTML = `
-            <div style="text-align: center; color: #999; margin-top: 50px;">
-                <p>No hay mensajes con ${selectedUserName}</p>
-                <p>¡Envía el primer mensaje!</p>
-            </div>
-        `;
-        return;
-    }
-    
-    console.log("Mostrando mensajes:", messages);
-    
-    let html = '';
-    let lastDate = '';
-    
-    messages.forEach(msg => {
-        const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
-        
-        if (msgDate !== lastDate) {
-            html += `
-                <div class="date-separator">
-                    <span>${msgDate}</span>
-                </div>
-            `;
-            lastDate = msgDate;
+        function displayMessages(messages) {
+            const messagesArea = document.getElementById('messagesArea');
+            
+            if (!messages || messages.length === 0) {
+                messagesArea.innerHTML = `
+                    <div style="text-align: center; color: #999; margin-top: 50px;">
+                        <p>No hay mensajes con ${selectedUserName}</p>
+                        <p>¡Envía el primer mensaje!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            let lastDate = '';
+            
+            messages.forEach(msg => {
+                const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
+                
+                if (msgDate !== lastDate) {
+                    html += `
+                        <div class="date-separator">
+                            <span>${msgDate}</span>
+                        </div>
+                    `;
+                    lastDate = msgDate;
+                }
+                
+                const messageClass = msg.id_remitente === currentUser.id ? 'sent' : 'received';
+                html += `
+                    <div class="message ${messageClass}">
+                        <div class="message-content">${msg.mensaje}</div>
+                        <div class="message-time">${new Date(msg.fecha_envio).toLocaleTimeString()}</div>
+                    </div>
+                `;
+            });
+            
+            messagesArea.innerHTML = html;
+            messagesArea.scrollTop = messagesArea.scrollHeight;
         }
         
-        const messageClass = msg.id_remitente === currentUser.id ? 'sent' : 'received';
-        html += `
-            <div class="message ${messageClass}">
-                <div class="message-content">${msg.mensaje}</div>
-                <div class="message-time">${new Date(msg.fecha_envio).toLocaleTimeString()}</div>
-            </div>
-        `;
-    });
-    
-    messagesArea.innerHTML = html;
-    messagesArea.scrollTop = messagesArea.scrollHeight;
-}
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !selectedUserId) {
+                alert('Selecciona un usuario y escribe un mensaje');
+                return;
+            }
+            
+            try {
+                await addDoc(collection(db, "mensajes"), {
+                    id_remitente: currentUser.id,
+                    id_destinatario: selectedUserId,
+                    mensaje: message,
+                    tipo_mensaje: 'texto',
+                    fecha_envio: new Date().toISOString(),
+                    leido: false
+                });
+                
+                input.value = ''; 
+                
+            } catch (error) {
+                console.error('Error enviando mensaje:', error);
+                alert('Error al enviar: ' + error.message);
+            }
+        }
         
-  async function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const message = input.value.trim();
-    
-    if (!message || !selectedUserId) {
-        alert('Selecciona un usuario y escribe un mensaje');
-        return;
-    }
-    
-    try {
-        console.log("Enviando mensaje:", message);
-        console.log("De:", currentUser.id, "Para:", selectedUserId);
-        
-        await addDoc(collection(db, "mensajes"), {
-            id_remitente: currentUser.id,
-            id_destinatario: selectedUserId,
-            mensaje: message,
-            tipo_mensaje: 'texto',
-            fecha_envio: new Date().toISOString(),
-            leido: false
-        });
-        
-        console.log("Mensaje enviado correctamente");
-        input.value = ''; // Limpiar input
-        
-    } catch (error) {
-        console.error('Error enviando mensaje:', error);
-        alert('Error al enviar: ' + error.message);
-    }
-}
+        // --- TUS FUNCIONES ORIGINALES DE AUDIO Y ARCHIVOS ---
         
         async function startRecording() {
             try {
@@ -462,35 +504,198 @@
             
             input.click();
         }
-        
-        function startVideoCall() {
+
+        // --- FUNCIONES DE VIDEOLLAMADA (WebRTC) ---
+
+        function listenForIncomingCalls() {
+            const llamadasRef = collection(db, 'llamadas');
+            const q = query(llamadasRef, where('id_destinatario', '==', currentUser.id));
+
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const callData = change.doc.data();
+                        
+                        if (callData.offer && !callData.answer) {
+                            currentCallDocId = change.doc.id;
+                            const caller = allUsers.find(u => u.id === callData.id_remitente);
+                            const callerName = caller ? caller.nombre : 'Usuario desconocido';
+                            
+                            document.getElementById('callerNameText').textContent = `${callerName} te está llamando...`;
+                            document.getElementById('incomingCallModal').style.display = 'flex';
+                        }
+                    }
+                });
+            });
+        }
+
+        async function startVideoCall() {
             if (!selectedUserId) {
                 alert('Selecciona un usuario para llamar');
                 return;
             }
-            
-            alert('Funcionalidad de videollamada - Pendiente implementación');
+
+            document.getElementById('videoCallContainer').style.display = 'flex';
+            document.getElementById('messagesArea').style.display = 'none';
+            document.getElementById('chatInputArea').style.display = 'none';
+
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            remoteStream = new MediaStream();
+
+            document.getElementById('localVideo').srcObject = localStream;
+            document.getElementById('remoteVideo').srcObject = remoteStream;
+
+            peerConnection = new RTCPeerConnection(servers);
+
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            peerConnection.ontrack = event => {
+                event.streams[0].getTracks().forEach(track => {
+                    remoteStream.addTrack(track);
+                });
+            };
+
+            const callDoc = doc(collection(db, 'llamadas'));
+            callDocRef = callDoc;
+            const offerCandidates = collection(callDoc, 'offerCandidates');
+            const answerCandidates = collection(callDoc, 'answerCandidates');
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    addDoc(offerCandidates, event.candidate.toJSON());
+                }
+            };
+
+            const offerDescription = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offerDescription);
+
+            const offer = {
+                sdp: offerDescription.sdp,
+                type: offerDescription.type,
+            };
+
+            await setDoc(callDoc, { offer, id_remitente: currentUser.id, id_destinatario: selectedUserId });
+
+            onSnapshot(callDoc, (snapshot) => {
+                if (!snapshot.exists()) {
+                    hangup();
+                    return;
+                }
+                const data = snapshot.data();
+                if (!peerConnection.currentRemoteDescription && data?.answer) {
+                    const answerDescription = new RTCSessionDescription(data.answer);
+                    peerConnection.setRemoteDescription(answerDescription);
+                }
+            });
+
+            onSnapshot(answerCandidates, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const candidate = new RTCIceCandidate(change.doc.data());
+                        peerConnection.addIceCandidate(candidate);
+                    }
+                });
+            });
         }
-        
-        function startAudioCall() {
-            if (!selectedUserId) {
-                alert('Selecciona un usuario para llamar');
-                return;
+
+        async function answerCall() {
+            document.getElementById('incomingCallModal').style.display = 'none';
+            document.getElementById('videoCallContainer').style.display = 'flex';
+            document.getElementById('messagesArea').style.display = 'none';
+            document.getElementById('chatInputArea').style.display = 'none';
+
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            remoteStream = new MediaStream();
+
+            document.getElementById('localVideo').srcObject = localStream;
+            document.getElementById('remoteVideo').srcObject = remoteStream;
+
+            peerConnection = new RTCPeerConnection(servers);
+
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            peerConnection.ontrack = event => {
+                event.streams[0].getTracks().forEach(track => {
+                    remoteStream.addTrack(track);
+                });
+            };
+
+            const callDoc = doc(db, 'llamadas', currentCallDocId);
+            callDocRef = callDoc;
+            const offerCandidates = collection(callDoc, 'offerCandidates');
+            const answerCandidates = collection(callDoc, 'answerCandidates');
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    addDoc(answerCandidates, event.candidate.toJSON());
+                }
+            };
+
+            const callData = (await getDoc(callDoc)).data();
+            const offerDescription = callData.offer;
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
+
+            const answerDescription = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answerDescription);
+
+            const answer = {
+                type: answerDescription.type,
+                sdp: answerDescription.sdp,
+            };
+
+            await updateDoc(callDoc, { answer });
+
+            onSnapshot(callDoc, (snapshot) => {
+                if (!snapshot.exists()) {
+                    hangup();
+                }
+            });
+
+            onSnapshot(offerCandidates, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const candidate = new RTCIceCandidate(change.doc.data());
+                        peerConnection.addIceCandidate(candidate);
+                    }
+                });
+            });
+        }
+
+        async function hangup() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
             }
-            
-            alert('Funcionalidad de llamada de audio - Pendiente implementación');
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+            }
+            if (peerConnection) {
+                peerConnection.close();
+            }
+
+            document.getElementById('videoCallContainer').style.display = 'none';
+            document.getElementById('messagesArea').style.display = 'block';
+            document.getElementById('chatInputArea').style.display = 'flex';
+
+            if (callDocRef) {
+                try {
+                    await deleteDoc(callDocRef);
+                    callDocRef = null;
+                } catch (error) {
+                    console.error("Error al borrar la llamada de Firebase:", error);
+                }
+            }
+            currentCallDocId = null;
         }
-        
+
         window.addEventListener('beforeunload', function() {
-            if (unsubscribeMessages) {
-                unsubscribeMessages();
-            }
-            if (recordingTimer) {
-                clearInterval(recordingTimer);
-            }
+            if (unsubscribeMessages) unsubscribeMessages();
+            if (recordingTimer) clearInterval(recordingTimer);
+            hangup(); 
         });
     </script>
 </body>
-
 </html>
-
