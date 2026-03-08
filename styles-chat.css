@@ -96,140 +96,41 @@ body {
 .role-docente { background: #EFF6FF; color: #5A72A0; }
 .user-detail { font-size: 13px; color: #64748B; display: flex; gap: 10px; }
 .badge-unread { background: #EF4444; color: white; border-radius: 50%; min-width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; margin-left: auto; }
-
-.chat-main { flex: 1; display: flex; flex-direction: column; background: #F8FAFC; position: relative; }
-
-/* ESTILOS PARA LA VIDEOLLAMADA Y EL MODAL */
-
-.video-call-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #1E293B;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-}
-
-.video-streams {
-    flex: 1;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #000;
-}
-
-#remoteVideo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-#localVideo {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 150px;
-    height: 200px;
-    background: #334155;
-    border-radius: 12px;
-    border: 2px solid white;
-    object-fit: cover;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-.video-controls {
-    padding: 20px;
-    background: #1E293B;
-    display: flex;
-    justify-content: center;
-}
-
-.control-btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 30px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.2s;
-}
-
-.hangup-btn {
-    background: #EF4444;
-    color: white;
-}
-
-.hangup-btn:hover {
-    background: #DC2626;
-}
-
-.incoming-call-modal {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.8);
-    z-index: 200;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(5px);
-}
-
-.incoming-call-content {
-    background: white;
-    padding: 30px;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 0.3s ease;
-}
-
-.caller-avatar {
-    font-size: 50px;
-    margin-bottom: 15px;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(0.95); opacity: 0.8; }
-    50% { transform: scale(1.05); opacity: 1; }
-    100% { transform: scale(0.95); opacity: 0.8; }
-}
-
-.incoming-call-actions {
-    display: flex;
-    gap: 15px;
-    margin-top: 25px;
-    justify-content: center;
-}
-
-.call-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 30px;
-    font-weight: bold;
-    color: white;
-    cursor: pointer;
-}
-
-.accept-btn { background: #10B981; }
-.accept-btn:hover { background: #059669; }
-.reject-btn { background: #EF4444; }
-.reject-btn:hover { background: #DC2626; }
+.chat-main { flex: 1; display: flex; flex-direction: column; background: #F8FAFC; }
 
 @media screen and (max-width: 992px) {
-    .chat-container { width: 95%; height: 90vh; flex-direction: column; }
-    .users-sidebar { width: 100%; height: 40%; border-right: none; border-bottom: 2px solid #E2E8F0; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .chat-main { height: 60%; }
-    body { padding: 10px; }
+    .chat-container {
+        width: 95%;
+        height: 90vh;
+        flex-direction: column;
+    }
+    .users-sidebar {
+        width: 100%;
+        height: 40%;
+        border-right: none;
+        border-bottom: 2px solid #E2E8F0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .chat-main {
+        height: 60%;
+    }
+    body {
+        padding: 10px;
+    }
 }
 
 @media screen and (max-width: 480px) {
-    .user-profile { padding: 15px; }
-    .search-box { padding: 10px 15px; }
-    .users-sidebar { height: 35%; }
-    .chat-main { height: 65%; }
+    .user-profile {
+        padding: 15px;
+    }
+    .search-box {
+        padding: 10px 15px;
+    }
+    .users-sidebar {
+        height: 35%;
+    }
+    .chat-main {
+        height: 65%;
+    }
 }
+
