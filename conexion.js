@@ -1,3 +1,5 @@
+// conexion.js - Versión con CDN
+// Importar desde la CDN de Firebase
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { 
   getFirestore, 
