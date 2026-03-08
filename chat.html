@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles-chat.css">
+    
     <title>Chat UTC - Comunidad</title>
 </head>
 <body>
@@ -86,21 +86,71 @@
         </div>
     </div>
 
+    <!-- Contenedor para videollamada -->
+    <div id="videoCallContainer">
+        <div class="video-wrapper">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <video id="localVideo" autoplay playsinline muted></video>
+            
+            <div class="call-controls">
+                <button id="muteAudioBtn" title="Silenciar/Activar audio">🔇</button>
+                <button id="muteVideoBtn" title="Ocultar/Mostrar video">🎥</button>
+                <button id="endCallBtn" title="Terminar llamada">🔴</button>
+            </div>
+            
+            <button id="closeCallBtn">&times;</button>
+        </div>
+    </div>
+
     <script type="module">
         import { db } from './conexion.js';
-        import { collection, query, where, getDocs, addDoc, onSnapshot, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { 
+            collection, 
+            query, 
+            where, 
+            getDocs, 
+            addDoc, 
+            onSnapshot, 
+            orderBy, 
+            updateDoc, 
+            doc,
+            setDoc,
+            getDoc,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Variables del chat
         let currentUser = null;
         let selectedUserId = null;
         let selectedUserName = '';
         let allUsers = [];
         let unsubscribeMessages = null;
         
+        // Variables para grabación
         let mediaRecorder = null;
         let audioChunks = [];
         let recordingStartTime = null;
         let recordingTimer = null;
         
+        // Variables para WebRTC
+        let localStream = null;
+        let peerConnection = null;
+        let currentCallRoomId = null;
+        let unsubscribeCall = null;
+        let unsubscribeIceCandidates = null;
+        
+        // Configuración STUN para WebRTC
+        const iceServers = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
+            ]
+        };
+        
+        // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
             const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
             
@@ -116,7 +166,9 @@
                 userData.tipo === 'estudiante' ? 'Estudiante' : 'Docente';
             
             loadUsers();
+            listenForIncomingCalls();
             
+            // Event listeners
             document.getElementById('searchUser').addEventListener('input', filterUsers);
             document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
             document.getElementById('audioCallBtn').addEventListener('click', startAudioCall);
@@ -131,39 +183,45 @@
             document.getElementById('backToHomeBtn').addEventListener('click', function() {
                 window.location.href = currentUser.tipo === 'estudiante' ? 'student.html' : 'admin.html';
             });
+            
+            // Controles de llamada
+            document.getElementById('muteAudioBtn').addEventListener('click', toggleAudio);
+            document.getElementById('muteVideoBtn').addEventListener('click', toggleVideo);
+            document.getElementById('endCallBtn').addEventListener('click', endCall);
+            document.getElementById('closeCallBtn').addEventListener('click', endCall);
         });
+        
+        // ==================== FUNCIONES DEL CHAT ====================
         
         async function loadUsers() {
-    try {
-        const usuariosRef = collection(db, "usuarios");
-        const querySnapshot = await getDocs(usuariosRef);
-        
-        allUsers = [];
-        querySnapshot.forEach((doc) => {
-            if (doc.id !== currentUser.id) {
-                allUsers.push({ 
-                    id: doc.id,
-                    ...doc.data() 
+            try {
+                const usuariosRef = collection(db, "usuarios");
+                const querySnapshot = await getDocs(usuariosRef);
+                
+                allUsers = [];
+                querySnapshot.forEach((doc) => {
+                    if (doc.id !== currentUser.id) {
+                        allUsers.push({ 
+                            id: doc.id,
+                            ...doc.data() 
+                        });
+                    }
                 });
+                
+                document.getElementById('totalUsers').textContent = allUsers.length;
+                document.getElementById('unreadMessages').textContent = 0;
+                displayUsers(allUsers);
+                
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+                document.getElementById('usersList').innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #f44336;">
+                        Error al cargar usuarios: ${error.message}
+                        <button onclick="window.location.reload()" style="margin-top: 10px; padding: 5px 15px;">Reintentar</button>
+                    </div>
+                `;
             }
-        });
-        
-        document.getElementById('totalUsers').textContent = allUsers.length;
-        
-        document.getElementById('unreadMessages').textContent = 0;
-        
-        displayUsers(allUsers);
-        
-    } catch (error) {
-        console.error('Error cargando usuarios:', error);
-        document.getElementById('usersList').innerHTML = `
-            <div style="padding: 20px; text-align: center; color: #f44336;">
-                Error al cargar usuarios: ${error.message}
-                <button onclick="window.location.reload()" style="margin-top: 10px; padding: 5px 15px;">Reintentar</button>
-            </div>
-        `;
-    }
-}
+        }
         
         function displayUsers(users) {
             const usersList = document.getElementById('usersList');
@@ -208,13 +266,8 @@
         
         function createUserItem(user) {
             const isSelected = selectedUserId === user.id ? 'active' : '';
-            const unreadBadge = ''; // Simplificado
-            
-            const statusClass = 'status-offline';
             const roleClass = user.tipo_usuario === 'docente' ? 'role-docente' : 'role-estudiante';
-            
             const iniciales = user.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-            
             const especialidad = user.tipo_usuario === 'estudiante' ? user.carrera : user.departamento;
             
             return `
@@ -225,7 +278,7 @@
                      data-specialty="${especialidad || 'No especificado'}">
                     <div class="user-avatar">
                         ${iniciales || '👤'}
-                        <span class="user-status ${statusClass}"></span>
+                        <span class="user-status status-offline"></span>
                     </div>
                     <div class="user-info">
                         <div class="user-name">
@@ -234,7 +287,6 @@
                         </div>
                         <div class="user-detail">
                             <span>${especialidad || 'No especificado'}</span>
-                            ${unreadBadge}
                         </div>
                     </div>
                 </div>
@@ -303,79 +355,76 @@
             });
         }
         
- function displayMessages(messages) {
-    const messagesArea = document.getElementById('messagesArea');
-    
-    if (!messages || messages.length === 0) {
-        messagesArea.innerHTML = `
-            <div style="text-align: center; color: #999; margin-top: 50px;">
-                <p>No hay mensajes con ${selectedUserName}</p>
-                <p>¡Envía el primer mensaje!</p>
-            </div>
-        `;
-        return;
-    }
-    
-    console.log("Mostrando mensajes:", messages);
-    
-    let html = '';
-    let lastDate = '';
-    
-    messages.forEach(msg => {
-        const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
-        
-        if (msgDate !== lastDate) {
-            html += `
-                <div class="date-separator">
-                    <span>${msgDate}</span>
-                </div>
-            `;
-            lastDate = msgDate;
+        function displayMessages(messages) {
+            const messagesArea = document.getElementById('messagesArea');
+            
+            if (!messages || messages.length === 0) {
+                messagesArea.innerHTML = `
+                    <div style="text-align: center; color: #999; margin-top: 50px;">
+                        <p>No hay mensajes con ${selectedUserName}</p>
+                        <p>¡Envía el primer mensaje!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            let lastDate = '';
+            
+            messages.forEach(msg => {
+                const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
+                
+                if (msgDate !== lastDate) {
+                    html += `
+                        <div class="date-separator">
+                            <span>${msgDate}</span>
+                        </div>
+                    `;
+                    lastDate = msgDate;
+                }
+                
+                const messageClass = msg.id_remitente === currentUser.id ? 'sent' : 'received';
+                
+                html += `
+                    <div class="message ${messageClass}">
+                        <div class="message-content">${msg.mensaje}</div>
+                        <div class="message-time">${new Date(msg.fecha_envio).toLocaleTimeString()}</div>
+                    </div>
+                `;
+            });
+            
+            messagesArea.innerHTML = html;
+            messagesArea.scrollTop = messagesArea.scrollHeight;
         }
         
-        const messageClass = msg.id_remitente === currentUser.id ? 'sent' : 'received';
-        html += `
-            <div class="message ${messageClass}">
-                <div class="message-content">${msg.mensaje}</div>
-                <div class="message-time">${new Date(msg.fecha_envio).toLocaleTimeString()}</div>
-            </div>
-        `;
-    });
-    
-    messagesArea.innerHTML = html;
-    messagesArea.scrollTop = messagesArea.scrollHeight;
-}
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !selectedUserId) {
+                alert('Selecciona un usuario y escribe un mensaje');
+                return;
+            }
+            
+            try {
+                await addDoc(collection(db, "mensajes"), {
+                    id_remitente: currentUser.id,
+                    id_destinatario: selectedUserId,
+                    mensaje: message,
+                    tipo_mensaje: 'texto',
+                    fecha_envio: new Date().toISOString(),
+                    leido: false
+                });
+                
+                input.value = '';
+                
+            } catch (error) {
+                console.error('Error enviando mensaje:', error);
+                alert('Error al enviar: ' + error.message);
+            }
+        }
         
-  async function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const message = input.value.trim();
-    
-    if (!message || !selectedUserId) {
-        alert('Selecciona un usuario y escribe un mensaje');
-        return;
-    }
-    
-    try {
-        console.log("Enviando mensaje:", message);
-        console.log("De:", currentUser.id, "Para:", selectedUserId);
-        
-        await addDoc(collection(db, "mensajes"), {
-            id_remitente: currentUser.id,
-            id_destinatario: selectedUserId,
-            mensaje: message,
-            tipo_mensaje: 'texto',
-            fecha_envio: new Date().toISOString(),
-            leido: false
-        });
-        
-        console.log("Mensaje enviado correctamente");
-        input.value = ''; // Limpiar input
-        
-    } catch (error) {
-        console.error('Error enviando mensaje:', error);
-        alert('Error al enviar: ' + error.message);
-    }
-}
+        // ==================== FUNCIONES DE GRABACIÓN ====================
         
         async function startRecording() {
             try {
@@ -425,9 +474,7 @@
             clearInterval(recordingTimer);
             
             mediaRecorder.addEventListener('stop', async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                
-                alert('Funcionalidad de audio - Pendiente implementación');
+                alert('Funcionalidad de audio en desarrollo');
                 
                 document.getElementById('normalInput').style.display = 'flex';
                 document.getElementById('recordingIndicator').classList.remove('active');
@@ -449,36 +496,351 @@
         }
         
         function attachFile() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.pdf,.doc,.docx,.jpg,.png,.txt';
-            
-            input.onchange = function() {
-                const file = this.files[0];
-                if (!file || !selectedUserId) return;
+            alert('Funcionalidad de archivos en desarrollo');
+        }
+        
+        // ==================== FUNCIONES DE WEBRTC ====================
+        
+        async function startVideoCall() {
+            if (!selectedUserId) {
+                alert('Selecciona un usuario para llamar');
+                return;
+            }
+            await startCall('video');
+        }
+        
+        async function startAudioCall() {
+            if (!selectedUserId) {
+                alert('Selecciona un usuario para llamar');
+                return;
+            }
+            await startCall('audio');
+        }
+        
+        async function startCall(callType) {
+            try {
+                console.log("Iniciando llamada de tipo:", callType);
                 
-                alert('Funcionalidad de archivos - Pendiente implementación');
+                // Obtener stream local
+                const constraints = {
+                    audio: true,
+                    video: callType === 'video'
+                };
+                
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Mostrar video local
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = localStream;
+                
+                // Crear ID único para la sala
+                const roomId = `${currentUser.id}_${selectedUserId}_${Date.now()}`;
+                currentCallRoomId = roomId;
+                
+                // Crear documento de llamada en Firestore
+                await addDoc(collection(db, "calls"), {
+                    callerId: currentUser.id,
+                    callerName: currentUser.nombre,
+                    calleeId: selectedUserId,
+                    callType: callType,
+                    status: 'ringing',
+                    createdAt: new Date().toISOString(),
+                    roomId: roomId
+                });
+                
+                // Crear sala de señalización
+                const roomRef = doc(db, "rooms", roomId);
+                await setDoc(roomRef, {
+                    callerId: currentUser.id,
+                    calleeId: selectedUserId,
+                    status: 'waiting',
+                    createdAt: new Date().toISOString()
+                });
+                
+                // Crear conexión peer
+                await createPeerConnection(roomRef, true);
+                
+                // Crear oferta
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                // Guardar oferta
+                await updateDoc(roomRef, {
+                    offer: {
+                        type: offer.type,
+                        sdp: offer.sdp
+                    }
+                });
+                
+                // Mostrar contenedor de videollamada
+                document.getElementById('videoCallContainer').style.display = 'block';
+                
+                // Escuchar respuesta
+                unsubscribeCall = onSnapshot(roomRef, async (snapshot) => {
+                    const data = snapshot.data();
+                    
+                    if (data.answer && !peerConnection.currentRemoteDescription) {
+                        const answer = new RTCSessionDescription(data.answer);
+                        await peerConnection.setRemoteDescription(answer);
+                    }
+                    
+                    if (data.status === 'ended') {
+                        endCall();
+                    }
+                });
+                
+                showNotification('Llamada iniciada, esperando respuesta...');
+                
+            } catch (error) {
+                console.error("Error al iniciar llamada:", error);
+                alert("Error al iniciar llamada: " + error.message);
+            }
+        }
+        
+        async function createPeerConnection(roomRef, isCaller) {
+            peerConnection = new RTCPeerConnection(iceServers);
+            
+            // Agregar tracks locales
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+            
+            // Mostrar video remoto
+            peerConnection.ontrack = (event) => {
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.srcObject = event.streams[0];
             };
             
-            input.click();
+            // Manejar candidatos ICE
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    const candidateRef = collection(
+                        roomRef, 
+                        isCaller ? "callerCandidates" : "calleeCandidates"
+                    );
+                    addDoc(candidateRef, event.candidate.toJSON());
+                }
+            };
+            
+            // Escuchar candidatos de la otra parte
+            const remoteCandidatesRef = collection(
+                roomRef, 
+                isCaller ? "calleeCandidates" : "callerCandidates"
+            );
+            
+            unsubscribeIceCandidates = onSnapshot(remoteCandidatesRef, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const candidate = new RTCIceCandidate(change.doc.data());
+                        peerConnection.addIceCandidate(candidate);
+                    }
+                });
+            });
+            
+            // Manejar cambios de estado
+            peerConnection.onconnectionstatechange = () => {
+                if (peerConnection.connectionState === 'disconnected' || 
+                    peerConnection.connectionState === 'failed' ||
+                    peerConnection.connectionState === 'closed') {
+                    endCall();
+                }
+            };
         }
         
-        function startVideoCall() {
-            if (!selectedUserId) {
-                alert('Selecciona un usuario para llamar');
-                return;
-            }
+        function listenForIncomingCalls() {
+            const callsRef = collection(db, "calls");
+            const q = query(
+                callsRef, 
+                where("calleeId", "==", currentUser.id),
+                where("status", "==", "ringing")
+            );
             
-            alert('Funcionalidad de videollamada - Pendiente implementación');
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const call = change.doc.data();
+                        showIncomingCallDialog(call, change.doc.id);
+                    }
+                });
+            });
         }
         
-        function startAudioCall() {
-            if (!selectedUserId) {
-                alert('Selecciona un usuario para llamar');
-                return;
-            }
+        function showIncomingCallDialog(call, callId) {
+            const callType = call.callType === 'video' ? '📹 videollamada' : '📞 llamada de audio';
             
-            alert('Funcionalidad de llamada de audio - Pendiente implementación');
+            // Crear diálogo
+            const dialog = document.createElement('div');
+            dialog.className = 'incoming-call-dialog';
+            dialog.innerHTML = `
+                <h3>🔔 Llamada entrante</h3>
+                <p><strong>${call.callerName}</strong> quiere una ${callType}</p>
+                <button class="accept">Aceptar</button>
+                <button class="reject">Rechazar</button>
+            `;
+            
+            document.body.appendChild(dialog);
+            
+            // Manejar aceptar
+            dialog.querySelector('.accept').onclick = async () => {
+                dialog.remove();
+                await acceptCall(call, callId);
+            };
+            
+            // Manejar rechazar
+            dialog.querySelector('.reject').onclick = async () => {
+                dialog.remove();
+                await rejectCall(callId);
+            };
+            
+            // Auto-rechazar después de 30 segundos
+            setTimeout(() => {
+                if (document.body.contains(dialog)) {
+                    dialog.remove();
+                    rejectCall(callId);
+                }
+            }, 30000);
+        }
+        
+        async function acceptCall(call, callId) {
+            try {
+                // Obtener stream local
+                const constraints = {
+                    audio: true,
+                    video: call.callType === 'video'
+                };
+                
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Mostrar video local
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = localStream;
+                
+                // Referencia a la sala
+                const roomRef = doc(db, "rooms", call.roomId);
+                currentCallRoomId = call.roomId;
+                
+                // Actualizar estado de la llamada
+                await updateDoc(doc(db, "calls", callId), {
+                    status: 'accepted',
+                    acceptedAt: new Date().toISOString()
+                });
+                
+                // Obtener la oferta
+                const roomSnapshot = await getDoc(roomRef);
+                const roomData = roomSnapshot.data();
+                
+                // Crear conexión peer
+                await createPeerConnection(roomRef, false);
+                
+                // Establecer descripción remota
+                const offer = new RTCSessionDescription(roomData.offer);
+                await peerConnection.setRemoteDescription(offer);
+                
+                // Crear respuesta
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                // Guardar respuesta
+                await updateDoc(roomRef, {
+                    answer: {
+                        type: answer.type,
+                        sdp: answer.sdp
+                    },
+                    status: 'active'
+                });
+                
+                // Mostrar contenedor
+                document.getElementById('videoCallContainer').style.display = 'block';
+                
+            } catch (error) {
+                console.error("Error al aceptar llamada:", error);
+            }
+        }
+        
+        async function rejectCall(callId) {
+            try {
+                await updateDoc(doc(db, "calls", callId), {
+                    status: 'rejected',
+                    rejectedAt: new Date().toISOString()
+                });
+                showNotification('Llamada rechazada');
+            } catch (error) {
+                console.error("Error al rechazar llamada:", error);
+            }
+        }
+        
+        async function endCall() {
+            try {
+                // Detener streams
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+                
+                // Cerrar conexión peer
+                if (peerConnection) {
+                    peerConnection.close();
+                    peerConnection = null;
+                }
+                
+                // Unsubscribe
+                if (unsubscribeCall) {
+                    unsubscribeCall();
+                    unsubscribeCall = null;
+                }
+                
+                if (unsubscribeIceCandidates) {
+                    unsubscribeIceCandidates();
+                    unsubscribeIceCandidates = null;
+                }
+                
+                // Actualizar estado en Firestore
+                if (currentCallRoomId) {
+                    await updateDoc(doc(db, "rooms", currentCallRoomId), {
+                        status: 'ended',
+                        endedAt: new Date().toISOString()
+                    });
+                }
+                
+                // Ocultar contenedor
+                document.getElementById('videoCallContainer').style.display = 'none';
+                
+                // Limpiar videos
+                document.getElementById('localVideo').srcObject = null;
+                document.getElementById('remoteVideo').srcObject = null;
+                
+                currentCallRoomId = null;
+                
+            } catch (error) {
+                console.error("Error al terminar llamada:", error);
+            }
+        }
+        
+        function toggleAudio() {
+            if (localStream) {
+                const audioTracks = localStream.getAudioTracks();
+                const enabled = !audioTracks[0]?.enabled;
+                audioTracks.forEach(track => track.enabled = enabled);
+                document.getElementById('muteAudioBtn').textContent = enabled ? '🔇' : '🔊';
+            }
+        }
+        
+        function toggleVideo() {
+            if (localStream) {
+                const videoTracks = localStream.getVideoTracks();
+                const enabled = !videoTracks[0]?.enabled;
+                videoTracks.forEach(track => track.enabled = enabled);
+                document.getElementById('muteVideoBtn').textContent = enabled ? '🎥' : '🚫';
+            }
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'call-notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
         }
         
         window.addEventListener('beforeunload', function() {
@@ -488,8 +850,13 @@
             if (recordingTimer) {
                 clearInterval(recordingTimer);
             }
+            if (unsubscribeCall) {
+                unsubscribeCall();
+            }
+            if (unsubscribeIceCandidates) {
+                unsubscribeIceCandidates();
+            }
         });
     </script>
 </body>
-
 </html>
