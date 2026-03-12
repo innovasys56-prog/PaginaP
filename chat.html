@@ -102,6 +102,19 @@
     </div>
 
     <script type="module">
+        // ===== FIX PARA CELULAR Y SCROLL =====
+
+function scrollToBottom(){
+    const messagesArea = document.getElementById("messagesArea");
+    if(messagesArea){
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+}
+
+window.addEventListener("resize", () => {
+    scrollToBottom();
+});
+        
         import { db } from './conexion.js';
         import { 
             collection, 
@@ -820,3 +833,4 @@
     </script>
 </body>
 </html>
+
