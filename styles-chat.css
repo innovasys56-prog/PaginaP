@@ -238,7 +238,7 @@ body {
     border-radius: 24px;
     outline: none;
     background: #F8FAFC;
-    font-size: 16px;
+    font-size: 20px;
     color: #334155;
     transition: all 0.2s;
 }
@@ -476,19 +476,13 @@ body {
     display:none;
     background:none;
     border:none;
-    font-size:16px;
+    font-size:22px;
     margin-right:10px;
     cursor:pointer;
 }
 
 /* Vista móvil tipo WhatsApp */
 @media screen and (max-width:768px){
-    .send-btn, .voice-record-btn, .attach-btn {
-        width: 39px;       /* ancho fijo */
-        height: 39px;      /* alto fijo */
-        font-size: 16px;   /* tamaño de ícono */
-        flex-shrink: 0;    /* no se achique */
-    }
 
 .chat-container{
     flex-direction:row;
@@ -582,9 +576,6 @@ body {
 }
 
 }
-
-
-
 
 
 
