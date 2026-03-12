@@ -238,7 +238,7 @@ body {
     border-radius: 24px;
     outline: none;
     background: #F8FAFC;
-    font-size: 14px;
+    font-size: 16px;
     color: #334155;
     transition: all 0.2s;
 }
@@ -576,6 +576,7 @@ body {
 }
 
 }
+
 
 
 
