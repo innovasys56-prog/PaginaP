@@ -483,103 +483,66 @@ body {
 
 /* Vista móvil tipo WhatsApp */
 @media screen and (max-width:768px){
-    /* Ajuste para los botones de acción en móvil */
     .send-btn, .voice-record-btn, .attach-btn {
-        width: 42px;       /* ancho fijo */
-        height: 42px;      /* alto fijo */
-        font-size: 16px;   /* tamaño de ícono */
+        width: 30px;       /* ancho fijo */
+        height: 40px;      /* alto fijo */
+        font-size: 14px;   /* tamaño de ícono */
         flex-shrink: 0;    /* no se achique */
     }
 
-    .chat-container{
-        flex-direction:row;
-        width:100%;
-        height:100vh;
-    }
+.chat-container{
+    flex-direction:row;
+    width:100%;
+    height:100vh;
+}
 
-    /* sidebar ocupa pantalla completa */
-    .users-sidebar{
-        width:100%;
-        height:100%;
-    }
+/* sidebar ocupa pantalla completa */
+.users-sidebar{
+    width:100%;
+    height:100%;
+}
 
-    /* chat oculto hasta abrir conversación */
-    .chat-main{
-        position:fixed;
-        top:0;
-        right:-100%;
-        width:100%;
-        height:100%;
-        background:#F8FAFC;
-        transition:0.3s;
-        z-index:5;
-    }
+/* chat oculto hasta abrir conversación */
+.chat-main{
+    position:fixed;
+    top:0;
+    right:-100%;
+    width:100%;
+    height:100%;
+    background:#F8FAFC;
+    transition:0.3s;
+    z-index:5;
+}
 
-    /* cuando se abre el chat */
-    .chat-main.active{
-        right:0;
-    }
+/* cuando se abre el chat */
+.chat-main.active{
+    right:0;
+}
 
-    /* botón regresar */
-    #backMobileBtn{
-        display:block;
-    }
+/* botón regresar */
+#backMobileBtn{
+    display:block;
+}
 
-    .chat-header{
-        gap:10px;
-    }
+.chat-header{
+    gap:10px;
+}
 
-    /* mensajes más cómodos en móvil */
-    .messages-area{
-        padding:15px;
-    }
+/* mensajes más cómodos en móvil */
+.messages-area{
+    padding:15px;
+}
 
-    .message{
-        max-width:85%;
-    }
+.message{
+    max-width:85%;
+}
 
-    /* input fijo abajo */
-    .chat-input-area{
-        padding:12px 15px;  /* un poquito más de padding */
-    }
+/* input fijo abajo */
+.chat-input-area{
+    padding:10px 15px;
+}
 
-    .input-container {
-        display: flex;
-        align-items: center; /* centra verticalmente input y botones */
-        gap: 10px;
-        width: 100%;
-    }
-
-    .message-input {
-        flex: 1;
-        font-size: 16px;   /* evita zoom automático en móviles */
-        height: 46px;       /* ajusta altura para que coincida con botones */
-        padding: 12px 15px;
-        border-radius: 24px;
-        border: 1px solid #CBD5E1;
-        outline: none;
-        background: #F8FAFC;
-        transition: all 0.2s;
-    }
-
-    .message-input:focus {
-        background: #FFFFFF;
-        border-color: #5A72A0;
-        box-shadow: 0 0 0 3px rgba(90, 114, 160, 0.1);
-    }
-
-    .send-btn, .voice-record-btn, .attach-btn {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        font-size: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        border: none;
-        transition: all 0.2s;
-    }
+}
 
 
 /* =========================================
