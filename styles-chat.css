@@ -228,11 +228,13 @@ body {
 .input-container {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px; /* Reduje un poco el espacio de 12px a 8px para que respire mejor en celulares */
+    width: 100%; /* NUEVO: Asegura que el contenedor no se desborde de la pantalla */
 }
 
 .message-input {
-    flex: 1;
+    flex: 1 1 auto; /* Actualizado para que sea más flexible */
+    min-width: 0; /* 🔥 NUEVO (LA MAGIA): Obliga al input a encogerse si no hay espacio 🔥 */
     padding: 14px 20px;
     border: 1px solid #CBD5E1;
     border-radius: 24px;
@@ -242,6 +244,7 @@ body {
     color: #334155;
     transition: all 0.2s;
 }
+
 .message-input:focus {
     background: #FFFFFF;
     border-color: #5A72A0;
@@ -249,6 +252,7 @@ body {
 }
 
 .send-btn, .voice-record-btn, .attach-btn {
+    flex-shrink: 0; 
     width: 42px;
     height: 42px;
     border-radius: 50%;
@@ -593,6 +597,7 @@ body {
 }
 
 }
+
 
 
 
