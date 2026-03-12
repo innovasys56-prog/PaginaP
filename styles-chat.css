@@ -539,3 +539,43 @@ body {
 }
 
 
+/* =========================================
+   FIX INPUT CHAT EN COMPUTADORA
+   ========================================= */
+
+@media screen and (min-width:769px){
+
+.chat-input-area{
+    padding:15px 20px;
+}
+
+.input-container{
+    display:flex;
+    align-items:center;
+    width:100%;
+    gap:10px;
+}
+
+.message-input{
+    flex:1;
+    padding:12px 15px;
+    font-size:15px;
+}
+
+.send-btn{
+    width:45px;
+    height:45px;
+    font-size:18px;
+}
+
+.voice-record-btn,
+.attach-btn{
+    width:40px;
+    height:40px;
+    font-size:18px;
+}
+
+}
+
+
+
