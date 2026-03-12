@@ -483,59 +483,70 @@ body {
 
 /* Vista móvil tipo WhatsApp */
 @media screen and (max-width:768px){
+    /* 1. Ajuste vital: quitar paddings y usar dvh */
+    body {
+        padding: 0 !important; 
+        height: 100dvh; 
+    }
 
-.chat-container{
-    flex-direction:row;
-    width:100%;
-    height:100vh;
-}
+    .chat-container{
+        flex-direction: row;
+        width: 100%;
+        height: 100dvh;
+        border-radius: 0; /* Mejor sin bordes en pantalla completa */
+    }
 
-/* sidebar ocupa pantalla completa */
-.users-sidebar{
-    width:100%;
-    height:100%;
-}
+    /* sidebar ocupa pantalla completa */
+    .users-sidebar{
+        width: 100%;
+        height: 100%;
+    }
 
-/* chat oculto hasta abrir conversación */
-.chat-main{
-    position:fixed;
-    top:0;
-    right:-100%;
-    width:100%;
-    height:100%;
-    background:#F8FAFC;
-    transition:0.3s;
-    z-index:5;
-}
+    /* chat oculto hasta abrir conversación */
+    .chat-main{
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        height: 100dvh; /* Clave: usar dvh aquí también */
+        background: #F8FAFC;
+        transition: 0.3s;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+    }
 
-/* cuando se abre el chat */
-.chat-main.active{
-    right:0;
-}
+    /* cuando se abre el chat */
+    .chat-main.active{
+        right: 0;
+    }
 
-/* botón regresar */
-#backMobileBtn{
-    display:block;
-}
+    /* botón regresar */
+    #backMobileBtn{
+        display: block;
+    }
 
-.chat-header{
-    gap:10px;
-}
+    .chat-header{
+        gap: 10px;
+    }
 
-/* mensajes más cómodos en móvil */
-.messages-area{
-    padding:15px;
-}
+    /* mensajes más cómodos en móvil */
+    .messages-area{
+        padding: 15px;
+        flex: 1;
+        overflow-y: auto;
+    }
 
-.message{
-    max-width:85%;
-}
+    .message{
+        max-width: 85%;
+    }
 
-/* input fijo abajo */
-.chat-input-area{
-    padding:10px 15px;
-}
-
+    /* input fijo abajo con margen seguro para iPhone/Android modernos */
+    .chat-input-area{
+        padding: 10px 15px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        background: #FFFFFF;
+    }
 }
 
 
@@ -576,6 +587,7 @@ body {
 }
 
 }
+
 
 
 
