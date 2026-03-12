@@ -484,9 +484,9 @@ body {
 /* Vista móvil tipo WhatsApp */
 @media screen and (max-width:768px){
     .send-btn, .voice-record-btn, .attach-btn {
-        width: 30px;       /* ancho fijo */
+        width: 40px;       /* ancho fijo */
         height: 40px;      /* alto fijo */
-        font-size: 14px;   /* tamaño de ícono */
+        font-size: 15px;   /* tamaño de ícono */
         flex-shrink: 0;    /* no se achique */
     }
 
@@ -582,6 +582,7 @@ body {
 }
 
 }
+
 
 
 
