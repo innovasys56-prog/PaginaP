@@ -349,28 +349,45 @@ window.addEventListener("resize", () => {
         }
         
         function loadMessages() {
-            if (!selectedUserId) return;
-            
-            if (unsubscribeMessages) {
-                unsubscribeMessages();
-            }
-            
-            const mensajesRef = collection(db, "mensajes");
-            const q = query(
-                mensajesRef,
-                where("id_remitente", "in", [currentUser.id, selectedUserId]),
-                where("id_destinatario", "in", [currentUser.id, selectedUserId]),
-                orderBy("fecha_envio", "asc")
-            );
-            
-            unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
-                const messages = [];
-                querySnapshot.forEach((doc) => {
-                    messages.push({ id: doc.id, ...doc.data() });
+
+    if (!selectedUserId) return;
+
+    if (unsubscribeMessages) {
+        unsubscribeMessages();
+    }
+
+    const mensajesRef = collection(db, "mensajes");
+
+    const q = query(
+        mensajesRef,
+        orderBy("fecha_envio", "asc")
+    );
+
+    unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
+
+        const messages = [];
+
+        querySnapshot.forEach((doc) => {
+
+            const data = doc.data();
+
+            const esConversacion =
+                (data.id_remitente === currentUser.id && data.id_destinatario === selectedUserId) ||
+                (data.id_remitente === selectedUserId && data.id_destinatario === currentUser.id);
+
+            if (esConversacion) {
+                messages.push({
+                    id: doc.id,
+                    ...data
                 });
-                displayMessages(messages);
-            });
-        }
+            }
+
+        });
+
+        displayMessages(messages);
+    });
+
+}
         
         function displayMessages(messages) {
             const messagesArea = document.getElementById('messagesArea');
@@ -833,4 +850,5 @@ window.addEventListener("resize", () => {
     </script>
 </body>
 </html>
+
 
