@@ -323,30 +323,34 @@ window.addEventListener("resize", () => {
         }
         
         // --- FUNCIÓN CORREGIDA ---
-        function selectUser(userId, userName, userRole, userSpecialty) {
-            selectedUserId = userId;
-            selectedUserName = userName;
-            
-            document.getElementById('chatHeader').style.display = 'flex';
-            document.getElementById('chatInputArea').style.display = 'flex';
-            document.getElementById('chatWith').textContent = userName;
-            document.getElementById('chatStatus').textContent = `${userRole} • ${userSpecialty}`;
-            
-            // Verificamos si el elemento existe antes de ocultarlo
-            const noChatWelcome = document.querySelector('.no-chat-selected');
-            if (noChatWelcome) {
-                noChatWelcome.style.display = 'none';
-            }
-            
-            document.querySelectorAll('.user-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.id === userId) {
-                    item.classList.add('active');
-                }
-            });
-            
-            loadMessages();
+       function selectUser(userId, userName, userRole, userSpecialty) {
+
+    selectedUserId = userId;
+    selectedUserName = userName;
+
+    document.getElementById('chatHeader').style.display = 'flex';
+    document.getElementById('chatInputArea').style.display = 'flex';
+
+    document.getElementById('chatWith').textContent = userName;
+    document.getElementById('chatStatus').textContent = `${userRole} • ${userSpecialty}`;
+
+    const noChatWelcome = document.querySelector('.no-chat-selected');
+    if (noChatWelcome) {
+        noChatWelcome.style.display = 'none';
+    }
+
+    document.querySelectorAll('.user-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.id === userId) {
+            item.classList.add('active');
         }
+    });
+
+    // ⭐ ESTA LINEA ABRE EL CHAT EN MOVIL
+    document.querySelector(".chat-main").classList.add("active");
+
+    loadMessages();
+}
         
         function loadMessages() {
 
@@ -850,6 +854,7 @@ window.addEventListener("resize", () => {
     </script>
 </body>
 </html>
+
 
 
 
