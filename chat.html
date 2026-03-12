@@ -163,46 +163,59 @@ window.addEventListener("resize", () => {
             ]
         };
         
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
-            const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
-            
-            if (!userData) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            currentUser = userData;
-            
-            document.getElementById('userName').textContent = userData.nombre;
-            document.getElementById('userRole').textContent = 
-                userData.tipo === 'estudiante' ? 'Estudiante' : 'Docente';
-            
-            loadUsers();
-            listenForIncomingCalls();
-            
-            // Event listeners
-            document.getElementById('searchUser').addEventListener('input', filterUsers);
-            document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
-            document.getElementById('audioCallBtn').addEventListener('click', startAudioCall);
-            document.getElementById('sendBtn').addEventListener('click', sendMessage);
-            document.getElementById('messageInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') sendMessage();
-            });
-            document.getElementById('recordBtn').addEventListener('click', startRecording);
-            document.getElementById('sendRecordingBtn').addEventListener('click', stopAndSendRecording);
-            document.getElementById('cancelRecordingBtn').addEventListener('click', cancelRecording);
-            document.getElementById('attachBtn').addEventListener('click', attachFile);
-            document.getElementById('backToHomeBtn').addEventListener('click', function() {
-                window.location.href = currentUser.tipo === 'estudiante' ? 'student.html' : 'admin.html';
-            });
-            
-            // Controles de llamada
-            document.getElementById('muteAudioBtn').addEventListener('click', toggleAudio);
-            document.getElementById('muteVideoBtn').addEventListener('click', toggleVideo);
-            document.getElementById('endCallBtn').addEventListener('click', endCall);
-            document.getElementById('closeCallBtn').addEventListener('click', endCall);
+      // Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+
+    const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
+    
+    if (!userData) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    currentUser = userData;
+    
+    document.getElementById('userName').textContent = userData.nombre;
+    document.getElementById('userRole').textContent = 
+        userData.tipo === 'estudiante' ? 'Estudiante' : 'Docente';
+    
+    loadUsers();
+    listenForIncomingCalls();
+
+    // BOTON VOLVER EN MOVIL
+    const backBtn = document.getElementById("backMobileBtn");
+    if(backBtn){
+        backBtn.addEventListener("click", function(){
+            document.querySelector(".chat-main").classList.remove("active");
         });
+    }
+
+    // Event listeners
+    document.getElementById('searchUser').addEventListener('input', filterUsers);
+    document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
+    document.getElementById('audioCallBtn').addEventListener('click', startAudioCall);
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    document.getElementById('recordBtn').addEventListener('click', startRecording);
+    document.getElementById('sendRecordingBtn').addEventListener('click', stopAndSendRecording);
+    document.getElementById('cancelRecordingBtn').addEventListener('click', cancelRecording);
+    document.getElementById('attachBtn').addEventListener('click', attachFile);
+
+    document.getElementById('backToHomeBtn').addEventListener('click', function() {
+        window.location.href = currentUser.tipo === 'estudiante' ? 'student.html' : 'admin.html';
+    });
+
+    // Controles de llamada
+    document.getElementById('muteAudioBtn').addEventListener('click', toggleAudio);
+    document.getElementById('muteVideoBtn').addEventListener('click', toggleVideo);
+    document.getElementById('endCallBtn').addEventListener('click', endCall);
+    document.getElementById('closeCallBtn').addEventListener('click', endCall);
+
+});
         
         // ==================== FUNCIONES DEL CHAT ====================
         
@@ -855,6 +868,7 @@ window.addEventListener("resize", () => {
     </script>
 </body>
 </html>
+
 
 
 
