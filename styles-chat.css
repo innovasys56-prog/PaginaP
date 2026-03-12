@@ -483,6 +483,13 @@ body {
 
 /* Vista móvil tipo WhatsApp */
 @media screen and (max-width:768px){
+    /* Ajuste para los botones de acción en móvil */
+    .send-btn, .voice-record-btn, .attach-btn {
+        width: 42px;       /* ancho fijo */
+        height: 42px;      /* alto fijo */
+        font-size: 16px;   /* tamaño de ícono */
+        flex-shrink: 0;    /* no se achique */
+    }
 
     .chat-container{
         flex-direction:row;
@@ -612,6 +619,7 @@ body {
 }
 
 }
+
 
 
 
