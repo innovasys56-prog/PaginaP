@@ -362,14 +362,14 @@
             const estudiantes = users.filter(u => u.tipo_usuario === 'estudiante' || u.tipo_usuario === 'alumno');
             
             if (docentes.length > 0) {
-                html += `<div style="padding: 10px 15px; background: #e9ecef; font-weight: 600;">👨‍🏫 Docentes (${docentes.length})</div>`;
+                html += `<div style="padding: 10px 15px; background: #e9ecef; font-weight: 600;">👨‍⚕️ Psicologos (${docentes.length})</div>`;
                 docentes.forEach(user => {
                     html += createUserItem(user);
                 });
             }
             
             if (estudiantes.length > 0) {
-                html += `<div style="padding: 10px 15px; background: #e9ecef; font-weight: 600; margin-top: 5px;">👨‍🎓 Estudiantes (${estudiantes.length})</div>`;
+                html += `<div style="padding: 10px 15px; background: #e9ecef; font-weight: 600; margin-top: 5px;">🧑‍💼 Clientes (${estudiantes.length})</div>`;
                 estudiantes.forEach(user => {
                     html += createUserItem(user);
                 });
