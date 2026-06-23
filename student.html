@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil Clínico - Innovasys</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="styles-index.css">
+    <link rel="stylesheet" href="styles-student.css">
+    <style>
+        .nav-toggle {
+            display: none;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            padding: 0;
+        }
+        .hamburger {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            position: relative;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .hamburger::before,
+        .hamburger::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            transition: transform 0.3s ease-in-out;
+        }
+        .hamburger::before { top: -8px; }
+        .hamburger::after { bottom: -8px; }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background-color: #fff;
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            .nav-links.active { display: flex; }
+            .nav-links li { padding: 1rem 0; width: 100%; text-align: center; }
+            .nav-toggle { display: block; }
+            .top-nav { position: relative; }
+        }
+
+        .nav-toggle.active .hamburger { background-color: transparent; }
+        .nav-toggle.active .hamburger::before { transform: translateY(8px) rotate(45deg); }
+        .nav-toggle.active .hamburger::after { transform: translateY(-8px) rotate(-45deg); }
+
+        /* ===== BOTÓN AGENDAR CITA ===== */
+        .btn-agendar-cita {
+            width: 100%;
+            text-align: center;
+            padding: 14px;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: var(--white);
+            border-color: #10B981;
+        }
+
+        .btn-agendar-cita:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: scale(1.02);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+        }
+
+        /* ===== SECCIÓN DE HISTORIAL CLÍNICO ===== */
+        .clinical-section {
+            margin-top: 30px;
+            border-top: 2px solid #E2E8F0;
+            padding-top: 25px;
+        }
+
+        .clinical-section h2 {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .clinical-section h2 i {
+            color: var(--secondary-color);
+        }
+
+        .clinical-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .clinical-card {
+            background: #F7FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .clinical-card:hover {
+            border-color: var(--secondary-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .clinical-card h3 {
+            color: var(--primary-color);
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 8px;
+        }
+
+        .clinical-card h3 i {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        .clinical-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 0.9rem;
+        }
+
+        .clinical-item .label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .clinical-item .value {
+            color: var(--text-color);
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+        }
+
+        .clinical-item .value.si {
+            color: #E53E3E;
+        }
+
+        .clinical-item .value.no {
+            color: #10B981;
+        }
+
+        .clinical-full {
+            grid-column: 1 / -1;
+        }
+
+        .clinical-full .clinical-item {
+            justify-content: flex-start;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .clinical-full .clinical-item .value {
+            text-align: left;
+            max-width: 100%;
+            flex: 1;
+        }
+
+        .badge-clinical {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-clinical.si {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .badge-clinical.no {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        /* ===== POSTS SECTION ===== */
+        .posts-section {
+            margin-top: 50px;
+            border-top: 1px solid #E2E8F0;
+            padding-top: 40px;
+        }
+        .posts-section h2 {
+            text-align: center;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+        .posts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .post-card {
+            background-color: #F7FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--secondary-color);
+        }
+        .post-card .post-category {
+            display: inline-block;
+            background: rgba(66, 153, 225, 0.1);
+            color: var(--secondary-color);
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            align-self: flex-start;
+        }
+        .post-card .post-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        .post-card .post-preview {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+        .post-card .post-meta {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid #E2E8F0;
+            padding-top: 15px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .post-card .post-meta .post-author { font-weight: 600; color: var(--primary-color); }
+        .post-card .post-meta .post-views { display: flex; align-items: center; gap: 5px; }
+        .post-card .post-link-badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10B981;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-top: 10px;
+            align-self: flex-start;
+        }
+        .loading-posts, .no-posts { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--secondary-color);
+            animation: spin 1s ease infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .post-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center; align-items: center; padding: 20px;
+        }
+        .post-modal.active { display: flex; }
+        .post-modal-content {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            max-width: 700px; width: 100%; max-height: 90vh;
+            overflow-y: auto; position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .post-modal-content .modal-close {
+            position: sticky; top: 0; float: right; background: none; border: none;
+            font-size: 2rem; color: var(--text-muted); cursor: pointer; padding: 15px 20px; z-index: 10;
+        }
+        .post-modal-content .modal-close:hover { color: #E53E3E; }
+        .post-modal-content .modal-body { padding: 30px; padding-top: 0; }
+        .post-modal-content .modal-body .modal-category {
+            display: inline-block; background: rgba(66, 153, 225, 0.1); color: var(--secondary-color);
+            padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 15px; margin-top: 5px;
+        }
+        .post-modal-content .modal-body .modal-title { font-size: 1.8rem; color: var(--primary-color); margin-bottom: 15px; }
+        .post-modal-content .modal-body .modal-meta {
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;
+            color: var(--text-muted); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #E2E8F0; flex-wrap: wrap; gap: 5px;
+        }
+        .post-modal-content .modal-body .modal-meta .modal-author { font-weight: 600; color: var(--primary-color); }
+        .post-modal-content .modal-body .modal-content-text { color: var(--text-color); font-size: 1.05rem; line-height: 1.8; white-space: pre-wrap; word-wrap: break-word; }
+        .post-modal-content .modal-body .modal-enlace { margin-top: 25px; padding-top: 20px; border-top: 1px solid #E2E8F0; }
+        .post-modal-content .modal-body .modal-enlace a {
+            display: inline-flex; align-items: center; gap: 10px; background: var(--primary-color); color: var(--white);
+            padding: 12px 24px; border-radius: var(--border-radius); text-decoration: none; font-weight: 600; transition: all 0.3s ease;
+        }
+        .post-modal-content .modal-body .modal-enlace a:hover { background: #25456b; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .clinical-grid {
+                grid-template-columns: 1fr;
+            }
+            .clinical-full {
+                grid-column: 1;
+            }
+            .clinical-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+            .clinical-item .value {
+                text-align: left;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <a href="index.html"><img src="logomain.png" alt="Logo Innovasys" class="nav-logo"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="info.html#servicios">Psicologos</a></li>
+            <li><a href="info.html#quienes-somos">Especialistas</a></li>
+            <li><a href="info.html#blogs">Artículos y Blogs</a></li>
+            <li><a href="info.html#ayuda">Soporte y Ayuda</a></li>
+            <li><a href="chat.html">Chat de la Comunidad</a></li>
+            <li><a href="#" id="logoutLinkNav">Cerrar Sesión</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+    </nav>
+    <div id="hex-animation-container"></div>
+    
+    <div class="container">
+        <!-- ===== PERFIL ===== -->
+        <div class="profile-header">
+            <div class="profile-picture" id="profilePicture"></div>
+            <h1 id="clientName">Cargando...</h1>
+            <h3 class="subtitle"><i class="fas fa-user-shield"></i> Expediente de Cliente Digital</h3>
+        </div>
+        
+        <!-- ===== INFORMACIÓN PERSONAL ===== -->
+        <div class="profile-body">
+            <div class="info-section" style="grid-column: 1 / -1;">
+                <h2><i class="fas fa-id-card"></i> Datos del Cliente</h2>
+                
+                <div class="info-item">
+                    <span class="info-label">Nombre Completo:</span>
+                    <div class="info-value" id="fullName">-</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Teléfono de Contacto:</span>
+                    <div class="info-value" id="clientPhone">-</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Correo Electrónico:</span>
+                    <div class="info-value" id="clientEmail">-</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Fecha de Nacimiento:</span>
+                    <div class="info-value" id="clientBirthDate">-</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Edad:</span>
+                    <div class="info-value" id="clientAge">-</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Estado Civil:</span>
+                    <div class="info-value" id="clientCivilStatus">-</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Teléfono de Emergencia:</span>
+                    <div class="info-value" id="clientEmergencyPhone">-</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Contacto de Emergencia (Parentesco):</span>
+                    <div class="info-value" id="clientEmergencyContact">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== BOTONES DE ACCIÓN ===== -->
+        <button class="btn-agendar-cita" id="btnAgendarCita">
+            <i class="fas fa-calendar-plus"></i> Agendar Cita con Psicólogo
+        </button>
+
+        <button class="chat-btn" id="chatBtn"><i class="fas fa-comments"></i> Ir al Chat con Especialistas</button>
+        <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión Segura</button>
+
+        <!-- ===== HISTORIAL CLÍNICO COMPLETO ===== -->
+        <div class="clinical-section">
+            <h2><i class="fas fa-notes-medical"></i> Historial Clínico Completo</h2>
+
+            <div class="clinical-grid">
+                <!-- Motivo de Consulta -->
+                <div class="clinical-card clinical-full">
+                    <h3><i class="fas fa-comment-medical"></i> Motivo de Consulta</h3>
+                    <div class="clinical-item">
+                        <span class="label">Descripción:</span>
+                        <span class="value" id="clinicalMotivo">-</span>
+                    </div>
+                </div>
+
+                <!-- Antecedentes Familiares -->
+                <div class="clinical-card">
+                    <h3><i class="fas fa-users"></i> Antecedentes Familiares</h3>
+                    <div class="clinical-item"><span class="label">Diabetes</span><span class="value" id="famDiabetes">-</span></div>
+                    <div class="clinical-item"><span class="label">Nefrópatas</span><span class="value" id="famNefropatas">-</span></div>
+                    <div class="clinical-item"><span class="label">Hipertensión</span><span class="value" id="famHipertension">-</span></div>
+                    <div class="clinical-item"><span class="label">Malformaciones</span><span class="value" id="famMalformaciones">-</span></div>
+                    <div class="clinical-item"><span class="label">Cáncer</span><span class="value" id="famCancer">-</span></div>
+                    <div class="clinical-item"><span class="label">Cardiópatas</span><span class="value" id="famCardiopatas">-</span></div>
+                    <div class="clinical-item"><span class="label">Otros</span><span class="value" id="famOtros">-</span></div>
+                </div>
+
+                <!-- Antecedentes No Patológicos -->
+                <div class="clinical-card">
+                    <h3><i class="fas fa-smoking-ban"></i> Antecedentes No Patológicos</h3>
+                    <div class="clinical-item"><span class="label">Tabaquismo</span><span class="value" id="npTabaquismo">-</span></div>
+                    <div class="clinical-item"><span class="label">Detalle Tabaquismo</span><span class="value" id="npTabaquismoDetalle">-</span></div>
+                    <div class="clinical-item"><span class="label">Alcoholismo</span><span class="value" id="npAlcoholismo">-</span></div>
+                    <div class="clinical-item"><span class="label">Detalle Alcohol</span><span class="value" id="npAlcoholDetalle">-</span></div>
+                    <div class="clinical-item"><span class="label">Alergias</span><span class="value" id="npAlergias">-</span></div>
+                    <div class="clinical-item"><span class="label">Tipo Sanguíneo</span><span class="value" id="npTipoSangre">-</span></div>
+                    <div class="clinical-item"><span class="label">Vivienda</span><span class="value" id="npVivienda">-</span></div>
+                    <div class="clinical-item"><span class="label">Farmacodependencia</span><span class="value" id="npFarmaco">-</span></div>
+                </div>
+
+                <!-- Antecedentes Patológicos -->
+                <div class="clinical-card">
+                    <h3><i class="fas fa-hospital"></i> Antecedentes Patológicos</h3>
+                    <div class="clinical-item"><span class="label">Enf. Infancia</span><span class="value" id="patInfancia">-</span></div>
+                    <div class="clinical-item"><span class="label">Secuelas</span><span class="value" id="patSecuelas">-</span></div>
+                    <div class="clinical-item"><span class="label">Hospitalizaciones</span><span class="value" id="patHospitalizaciones">-</span></div>
+                    <div class="clinical-item"><span class="label">Cirugías</span><span class="value" id="patCirugias">-</span></div>
+                    <div class="clinical-item"><span class="label">Transfusiones</span><span class="value" id="patTransfusiones">-</span></div>
+                    <div class="clinical-item"><span class="label">Traumatismos</span><span class="value" id="patTraumatismos">-</span></div>
+                </div>
+
+                <!-- Historia Evolutiva -->
+                <div class="clinical-card clinical-full">
+                    <h3><i class="fas fa-baby"></i> Historia Evolutiva</h3>
+                    <div class="clinical-item"><span class="label">Condiciones del Embarazo</span><span class="value" id="evEmbarazo">-</span></div>
+                    <div class="clinical-item"><span class="label">Tipo de Parto</span><span class="value" id="evParto">-</span></div>
+                    <div class="clinical-item"><span class="label">Complicaciones al Nacer</span><span class="value" id="evComplicaciones">-</span></div>
+                    <div class="clinical-item"><span class="label">Peso y Talla al Nacer</span><span class="value" id="evPesoTalla">-</span></div>
+                    <div class="clinical-item"><span class="label">Lactancia</span><span class="value" id="evLactancia">-</span></div>
+                </div>
+
+                <!-- Enfermedad Actual -->
+                <div class="clinical-card clinical-full">
+                    <h3><i class="fas fa-stethoscope"></i> Enfermedad Actual</h3>
+                    <div class="clinical-item">
+                        <span class="label">Síntomas / Problemas actuales:</span>
+                        <span class="value" id="clinicalEnfermedadActual">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== PUBLICACIONES ===== -->
+        <div class="posts-section">
+            <h2><i class="fas fa-user-md"></i> Artículos y Avisos de los Psicólogos</h2>
+            <div class="posts-container" id="postsContainer">
+                <div class="loading-posts">
+                    <div class="spinner"></div>
+                    <p>Cargando publicaciones informativas...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL DE PUBLICACIONES ===== -->
+    <div class="post-modal" id="postModal">
+        <div class="post-modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-body">
+                <span class="modal-category" id="modalCategory">Especialidad</span>
+                <h2 class="modal-title" id="modalTitle">Título del Artículo</h2>
+                <div class="modal-meta">
+                    <span class="modal-author" id="modalAuthor">Psicólogo Autor</span>
+                    <span id="modalDate">Fecha de Publicación</span>
+                </div>
+                <div class="modal-content-text" id="modalContent">Contenido...</div>
+                <div class="modal-enlace" id="modalEnlaceContainer" style="display: none;">
+                    <a href="#" id="modalEnlace" target="_blank"><i class="fas fa-external-link-alt"></i> Ver Recurso Recomendado</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="animations.js"></script>
+
+    <script type="module">
+        import { db } from 'conexion.js';
+        import { collection, getDocs, updateDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
+            
+            if (!userData) {
+                alert('Por favor, inicie sesión para acceder a su perfil clínico');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // ===== DATOS PERSONALES =====
+            document.getElementById('clientName').textContent = userData.nombre || 'Usuario';
+            document.getElementById('fullName').textContent = userData.nombre || 'No especificado';
+            document.getElementById('clientPhone').textContent = userData.telefono || 'No especificado';
+            document.getElementById('clientEmail').textContent = userData.correo || 'No especificado';
+            document.getElementById('clientAge').textContent = userData.edad ? `${userData.edad} años` : 'No especificado';
+            document.getElementById('clientCivilStatus').textContent = userData.estado_civil || 'No especificado';
+            document.getElementById('clientEmergencyPhone').textContent = userData.tel_emergencia || 'No especificado';
+            document.getElementById('clientEmergencyContact').textContent = userData.contacto_parentesco || 'No especificado';
+
+            // Fecha de nacimiento
+            if (userData.fecha_nacimiento) {
+                const fNac = new Date(userData.fecha_nacimiento);
+                document.getElementById('clientBirthDate').textContent = !isNaN(fNac) ? 
+                    fNac.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }) : 
+                    userData.fecha_nacimiento;
+            } else {
+                document.getElementById('clientBirthDate').textContent = 'No especificado';
+            }
+
+            // ===== INICIALES DEL PERFIL =====
+            const initials = (userData.nombre || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('profilePicture').textContent = initials.substring(0, 2);
+
+            // ===== HISTORIAL CLÍNICO =====
+            // Motivo de consulta
+            document.getElementById('clinicalMotivo').textContent = userData.motivo_consulta || 'No especificado';
+
+            // Antecedentes Familiares
+            const fam = userData.antecedentes_familiares || {};
+            document.getElementById('famDiabetes').textContent = fam.diabetes === 'SÍ' ? `SÍ (${fam.diabetes_esp || ''})` : 'NO';
+            document.getElementById('famNefropatas').textContent = fam.nefropatas === 'SÍ' ? `SÍ (${fam.nefropatas_esp || ''})` : 'NO';
+            document.getElementById('famHipertension').textContent = fam.hipertension === 'SÍ' ? `SÍ (${fam.hipertension_esp || ''})` : 'NO';
+            document.getElementById('famMalformaciones').textContent = fam.malformaciones === 'SÍ' ? `SÍ (${fam.malformaciones_esp || ''})` : 'NO';
+            document.getElementById('famCancer').textContent = fam.cancer === 'SÍ' ? `SÍ (${fam.cancer_esp || ''})` : 'NO';
+            document.getElementById('famCardiopatas').textContent = fam.cardiopatas === 'SÍ' ? `SÍ (${fam.cardiopatas_esp || ''})` : 'NO';
+            document.getElementById('famOtros').textContent = fam.otros || 'No especificado';
+
+            // Antecedentes No Patológicos
+            const np = userData.no_patologicos || {};
+            document.getElementById('npTabaquismo').textContent = np.tabaquismo === 'SÍ' ? 'SÍ' : 'NO';
+            document.getElementById('npTabaquismoDetalle').textContent = np.tabaquismo === 'SÍ' ? 
+                `Cant: ${np.tabaquismo_cantidad || 'N/E'}, Años: ${np.tabaquismo_anos || 'N/E'}, Tipo: ${np.tabaquismo_tipo || 'N/E'}` : 'No aplica';
+            document.getElementById('npAlcoholismo').textContent = np.alcoholismo === 'SÍ' ? 'SÍ' : 'NO';
+            document.getElementById('npAlcoholDetalle').textContent = np.alcoholismo === 'SÍ' ? 
+                `mL: ${np.alcohol_ml || 'N/E'}, Años: ${np.alcohol_anos || 'N/E'}` : 'No aplica';
+            document.getElementById('npAlergias').textContent = np.alergias || 'No especificado';
+            document.getElementById('npTipoSangre').textContent = np.tipo_sanguineo || 'No especificado';
+            document.getElementById('npVivienda').textContent = np.vivienda || 'No especificado';
+            document.getElementById('npFarmaco').textContent = np.farmacodependencia || 'No especificado';
+
+            // Antecedentes Patológicos
+            const pat = userData.patologicos || {};
+            document.getElementById('patInfancia').textContent = pat.enfermedades_infancia || 'No especificado';
+            document.getElementById('patSecuelas').textContent = pat.secuelas || 'No especificado';
+            document.getElementById('patHospitalizaciones').textContent = pat.hospitalizaciones === 'SÍ' ? `SÍ (${pat.hospitalizaciones_esp || ''})` : 'NO';
+            document.getElementById('patCirugias').textContent = pat.quirurgicos === 'SÍ' ? `SÍ (${pat.quirurgicos_esp || ''})` : 'NO';
+            document.getElementById('patTransfusiones').textContent = pat.transfusiones === 'SÍ' ? `SÍ (${pat.transfusiones_esp || ''})` : 'NO';
+            document.getElementById('patTraumatismos').textContent = pat.traumatismos === 'SÍ' ? `SÍ (${pat.traumatismos_esp || ''})` : 'NO';
+
+            // Historia Evolutiva
+            const ev = userData.historia_evolutiva || {};
+            document.getElementById('evEmbarazo').textContent = ev.embarazo_condiciones || 'No especificado';
+            document.getElementById('evParto').textContent = ev.tipo_parto || 'No especificado';
+            document.getElementById('evComplicaciones').textContent = ev.complicaciones_nacer || 'No especificado';
+            document.getElementById('evPesoTalla').textContent = ev.peso_talla || 'No especificado';
+            document.getElementById('evLactancia').textContent = ev.lactancia || 'No especificado';
+
+            // Enfermedad Actual
+            document.getElementById('clinicalEnfermedadActual').textContent = userData.enfermedad_actual || 'No especificado';
+
+            // ===== BOTONES =====
+            document.getElementById('btnAgendarCita').addEventListener('click', function() {
+                window.location.href = 'agendar-cita.html';
+            });
+
+            document.getElementById('chatBtn').addEventListener('click', function() {
+                window.location.href = 'chat.html';
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                sessionStorage.removeItem('usuario_actual');
+                window.location.href = 'index.html';
+            });
+
+            const logoutLinkNav = document.getElementById('logoutLinkNav');
+            if(logoutLinkNav) {
+                logoutLinkNav.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('logoutBtn').click();
+                });
+            }
+            
+            // ===== PUBLICACIONES =====
+            async function cargarPublicaciones() {
+                try {
+                    const q = query(collection(db, "publicaciones"), orderBy("fecha_creacion", "desc"));
+                    const querySnapshot = await getDocs(q);
+                    const posts = [];
+                    
+                    querySnapshot.forEach((doc) => {
+                        posts.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    mostrarPublicaciones(posts);
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById('postsContainer').innerHTML = `<p class="no-posts">Error al cargar el contenido de los especialistas.</p>`;
+                }
+            }
+
+            function mostrarPublicaciones(posts) {
+                const container = document.getElementById('postsContainer');
+                
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-posts">
+                            <i class="fas fa-feather-alt" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px; display: block;"></i>
+                            <p>No hay artículos o guías compartidas por los terapeutas en este momento.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                posts.forEach(post => {
+                    if (!post.titulo) return;
+                    const preview = post.contenido ? post.contenido.substring(0, 140) + '...' : '';
+                    const linkBadge = post.enlace ? `<span class="post-link-badge"><i class="fas fa-link"></i> Recurso Adjunto</span>` : '';
+                    
+                    html += `
+                        <div class="post-card" data-id="${post.id}">
+                            <span class="post-category">${post.categoria || 'Salud Mental'}</span>
+                            <h3 class="post-title">${post.titulo}</h3>
+                            <p class="post-preview">${preview}</p>
+                            ${linkBadge}
+                            <div class="post-meta">
+                                <span class="post-author"><i class="fas fa-user-md"></i> ${post.autor || 'Psicólogo Especialista'}</span>
+                                <span class="post-views"><i class="fas fa-eye"></i> ${post.vistas || 0}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+                document.querySelectorAll('.post-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const postId = this.dataset.id;
+                        const post = posts.find(p => p.id === postId);
+                        if (post) {
+                            abrirModal(post);
+                            incrementarVistas(postId, post.vistas || 0);
+                        }
+                    });
+                });
+            }
+
+            function abrirModal(post) {
+                const modal = document.getElementById('postModal');
+                document.getElementById('modalCategory').textContent = post.categoria || 'Salud Mental';
+                document.getElementById('modalTitle').textContent = post.titulo;
+                document.getElementById('modalAuthor').textContent = post.autor || 'Psicólogo Especialista';
+                
+                const fecha = post.fecha_creacion ? new Date(post.fecha_creacion).toLocaleDateString('es-MX', {
+                    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                }) : 'Fecha reciente';
+                document.getElementById('modalDate').textContent = fecha;
+                document.getElementById('modalContent').textContent = post.contenido || '';
+                
+                const enlaceContainer = document.getElementById('modalEnlaceContainer');
+                const enlaceLink = document.getElementById('modalEnlace');
+                
+                if (post.enlace && post.enlace.trim() !== '') {
+                    enlaceContainer.style.display = 'block';
+                    enlaceLink.href = post.enlace;
+                } else {
+                    enlaceContainer.style.display = 'none';
+                }
+                
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            async function incrementarVistas(postId, vistasActuales) {
+                try {
+                    const postRef = doc(db, "publicaciones", postId);
+                    await updateDoc(postRef, { vistas: vistasActuales + 1 });
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            cargarPublicaciones();
+            
+            const modal = document.getElementById('postModal');
+            const modalClose = document.getElementById('modalClose');
+            
+            modalClose.addEventListener('click', function() {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            if (navToggle && navLinks) {
+                navToggle.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

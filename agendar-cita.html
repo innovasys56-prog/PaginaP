@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/styles-index.css">
+    <link rel="stylesheet" href="css/agendar-cita.css">
+    <title>Agendar Cita - Innovasys</title>
+    
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <a href="index.html"><img src="items/logomain.png" alt="Logo Plataforma Psicológica" class="nav-logo"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="info.html#servicios">Servicios</a></li>
+            <li><a href="info.html#quienes-somos">Quiénes Somos</a></li>
+            <li><a href="info.html#blogs">Blogs</a></li>
+            <li><a href="info.html#ayuda">Ayuda</a></li>
+            <li><a href="#" id="logoutLinkNav">Cerrar Sesión</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+    </nav>
+    <div id="hex-animation-container"></div>
+
+    <div class="container-cita">
+        <h1><i class="fas fa-calendar-plus"></i> Agendar Cita</h1>
+        <p class="subtitle">Selecciona un psicólogo y elige la fecha y hora para tu cita.</p>
+
+        <div id="alertSuccess" class="alert alert-success hidden"></div>
+        <div id="alertError" class="alert alert-error hidden"></div>
+        <div id="alertInfo" class="alert alert-info hidden"></div>
+
+        <div id="loadingPsicologos" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando psicólogos disponibles...</p>
+        </div>
+
+        <!-- Lista de psicólogos -->
+        <div id="psicologosContainer" class="psicologos-list hidden"></div>
+
+        <!-- Formulario de agendamiento -->
+        <form id="formCita" class="form-cita hidden">
+            <div class="form-group">
+                <label for="psicologoSeleccionado">Psicólogo seleccionado:</label>
+                <input type="text" id="psicologoSeleccionado" readonly style="background: #F7FAFC; font-weight: 600; color: var(--primary-color);">
+                <input type="hidden" id="psicologoId" value="">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fechaCita">Fecha de la cita:</label>
+                    <input type="date" id="fechaCita" min="">
+                </div>
+                <div class="form-group">
+                    <label for="horaCita">Hora de la cita:</label>
+                    <select id="horaCita">
+                        <option value="">Selecciona una hora</option>
+                        <option value="09:00">09:00 AM</option>
+                        <option value="09:30">09:30 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="10:30">10:30 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="11:30">11:30 AM</option>
+                        <option value="12:00">12:00 PM</option>
+                        <option value="12:30">12:30 PM</option>
+                        <option value="13:00">01:00 PM</option>
+                        <option value="13:30">01:30 PM</option>
+                        <option value="14:00">02:00 PM</option>
+                        <option value="14:30">02:30 PM</option>
+                        <option value="15:00">03:00 PM</option>
+                        <option value="15:30">03:30 PM</option>
+                        <option value="16:00">04:00 PM</option>
+                        <option value="16:30">04:30 PM</option>
+                        <option value="17:00">05:00 PM</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="motivoCita">Motivo de la cita:</label>
+                <select id="motivoCita">
+                    <option value="Estrés académico">Estrés académico</option>
+                    <option value="Ansiedad">Ansiedad</option>
+                    <option value="Depresión">Depresión</option>
+                    <option value="Problemas de sueño">Problemas de sueño</option>
+                    <option value="Problemas de relación">Problemas de relación</option>
+                    <option value="Orientación vocacional">Orientación vocacional</option>
+                    <option value="Bajo rendimiento">Bajo rendimiento académico</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-check-circle"></i> Agendar Cita
+            </button>
+        </form>
+
+        <div style="margin-top: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="student.html" class="btn-volver"><i class="fas fa-arrow-left"></i> Volver al Portal</a>
+        </div>
+    </div>
+
+    <script src="js/animations.js"></script>
+
+    <script type="module">
+        import { db } from './js/conexion.js';
+        import { 
+            collection, 
+            query, 
+            where, 
+            getDocs, 
+            addDoc,
+            doc,
+            getDoc,
+            updateDoc,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
+            
+            if (!userData) {
+                alert('Por favor inicie sesión primero');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Mostrar nombre del estudiante
+            document.querySelector('.subtitle').textContent = `Bienvenido, ${userData.nombre}`;
+
+            // Cargar psicólogos (usuarios con tipo_usuario = 'docente')
+            cargarPsicologos();
+
+            // Configurar fecha mínima (hoy)
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaCita').min = hoy;
+
+            // Evento para logout
+            document.getElementById('logoutLinkNav').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem('usuario_actual');
+                window.location.href = 'index.html';
+            });
+
+            // Evento para el formulario
+            document.getElementById('formCita').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await agendarCita(userData);
+            });
+        });
+
+        let psicologoSeleccionado = null;
+
+        async function cargarPsicologos() {
+            const container = document.getElementById('psicologosContainer');
+            const loading = document.getElementById('loadingPsicologos');
+
+            try {
+                // Buscar usuarios que sean docentes
+                const usuariosRef = collection(db, "usuarios");
+                const q = query(usuariosRef, where("tipo_usuario", "==", "docente"));
+                const querySnapshot = await getDocs(q);
+                
+                const psicologos = [];
+                querySnapshot.forEach((doc) => {
+                    psicologos.push({ id: doc.id, ...doc.data() });
+                });
+
+                loading.classList.add('hidden');
+                container.classList.remove('hidden');
+
+                if (psicologos.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i class="fas fa-user-md" style="font-size: 3rem; display: block; margin-bottom: 15px;"></i>
+                            <p>No hay psicólogos disponibles en este momento.</p>
+                            <p style="font-size: 0.9rem;">Por favor, intenta más tarde.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Mostrar psicólogos
+                let html = '';
+                psicologos.forEach(psic => {
+                    const iniciales = psic.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                    html += `
+                        <div class="psicologo-card" data-id="${psic.id}" data-name="${psic.nombre}">
+                            <div class="avatar">${iniciales}</div>
+                            <h3>${psic.nombre}</h3>
+                            <p>${psic.departamento || 'Departamento no especificado'}</p>
+                            <span class="badge"><i class="fas fa-user-md"></i> Psicólogo</span>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+                // Evento para seleccionar psicólogo
+                document.querySelectorAll('.psicologo-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        // Remover selección previa
+                        document.querySelectorAll('.psicologo-card').forEach(c => c.classList.remove('selected'));
+                        this.classList.add('selected');
+
+                        psicologoSeleccionado = {
+                            id: this.dataset.id,
+                            nombre: this.dataset.name
+                        };
+
+                        // Mostrar formulario
+                        document.getElementById('formCita').classList.remove('hidden');
+                        document.getElementById('psicologoSeleccionado').value = psicologoSeleccionado.nombre;
+                        document.getElementById('psicologoId').value = psicologoSeleccionado.id;
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error cargando psicólogos:', error);
+                loading.innerHTML = `
+                    <p style="color: #E53E3E;">Error al cargar psicólogos: ${error.message}</p>
+                    <button onclick="window.location.reload()" style="margin-top: 10px; padding: 8px 20px; background: var(--secondary-color); color: white; border: none; border-radius: var(--border-radius); cursor: pointer;">
+                        Reintentar
+                    </button>
+                `;
+            }
+        }
+
+        async function agendarCita(userData) {
+            const alertSuccess = document.getElementById('alertSuccess');
+            const alertError = document.getElementById('alertError');
+            const alertInfo = document.getElementById('alertInfo');
+
+            // Ocultar alertas previas
+            alertSuccess.classList.add('hidden');
+            alertError.classList.add('hidden');
+            alertInfo.classList.add('hidden');
+
+            // Validar que se haya seleccionado un psicólogo
+            if (!psicologoSeleccionado) {
+                alertError.textContent = 'Por favor, selecciona un psicólogo.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            const fecha = document.getElementById('fechaCita').value;
+            const hora = document.getElementById('horaCita').value;
+            const motivo = document.getElementById('motivoCita').value;
+
+            // Validar campos
+            if (!fecha) {
+                alertError.textContent = 'Por favor, selecciona una fecha.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            if (!hora) {
+                alertError.textContent = 'Por favor, selecciona una hora.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            // Verificar si la fecha es hoy y la hora ya pasó
+            const hoy = new Date();
+            const fechaSeleccionada = new Date(fecha + 'T' + hora + ':00');
+            
+            if (fechaSeleccionada < hoy) {
+                alertError.textContent = 'No puedes agendar citas en fechas u horas pasadas.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Verificar si ya existe una cita en esa fecha y hora con ese psicólogo
+                const citasRef = collection(db, "citas");
+                const q = query(
+                    citasRef,
+                    where("psicologo_id", "==", psicologoSeleccionado.id),
+                    where("fecha", "==", fecha),
+                    where("hora", "==", hora),
+                    where("estado", "in", ["pendiente", "confirmada"])
+                );
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    alertError.textContent = 'El psicólogo ya tiene una cita agendada en esa fecha y hora. Por favor, elige otra hora.';
+                    alertError.classList.remove('hidden');
+                    return;
+                }
+
+                // Crear la cita - Asegurar que el ID del psicólogo se guarde correctamente
+                const citaData = {
+                    estudiante_id: userData.id,
+                    estudiante_nombre: userData.nombre,
+                    estudiante_correo: userData.correo,
+                    estudiante_telefono: userData.telefono || 'No especificado',
+                    estudiante_carrera: userData.carrera || 'No especificada',
+                    psicologo_id: psicologoSeleccionado.id, // Este es el ID del documento del docente
+                    psicologo_nombre: psicologoSeleccionado.nombre,
+                    fecha: fecha,
+                    hora: hora,
+                    motivo: motivo,
+                    estado: 'pendiente',
+                    fecha_creacion: new Date().toISOString(),
+                    fecha_actualizacion: new Date().toISOString()
+                };
+
+                console.log('Guardando cita con datos:', citaData); // Para debug
+
+                await addDoc(collection(db, "citas"), citaData);
+
+                // Mostrar éxito
+                alertSuccess.textContent = `¡Cita agendada exitosamente con ${psicologoSeleccionado.nombre} para el ${fecha} a las ${hora}!`;
+                alertSuccess.classList.remove('hidden');
+
+                // Limpiar formulario
+                document.getElementById('fechaCita').value = '';
+                document.getElementById('horaCita').value = '';
+                document.getElementById('motivoCita').value = 'Estrés académico';
+                
+                // Deseleccionar psicólogo
+                document.querySelectorAll('.psicologo-card').forEach(c => c.classList.remove('selected'));
+                psicologoSeleccionado = null;
+                document.getElementById('psicologoSeleccionado').value = '';
+                document.getElementById('psicologoId').value = '';
+                document.getElementById('formCita').classList.add('hidden');
+
+            } catch (error) {
+                console.error('Error al agendar cita:', error);
+                alertError.textContent = 'Error al agendar la cita: ' + error.message;
+                alertError.classList.remove('hidden');
+            }
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+    
+            if (navToggle && navLinks) {
+                navToggle.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
