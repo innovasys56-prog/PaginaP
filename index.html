@@ -3,33 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles-index.css">
-    <title>Página principal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="terminos.css">
+    <title>Página principal - Sistema de Atención Psicológica</title>
+    
 </head>
 <body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <a href="index.html"><img src="logomain.png" alt="Logo Plataforma Psicológica" class="nav-logo"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="info.html#servicios">Psicologos</a></li>
+            <li><a href="info.html#quienes-somos">Quiénes Somos</a></li>
+            <li><a href="info.html#blogs">Blogs</a></li>
+            <li><a href="info.html#ayuda">Ayuda</a></li>
+            <li><a href="#" id="privacyLinkNav">Políticas de Privacidad</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+    </nav>
     <header>
-        <h1>Bienvenido al Sistema de Atención Psicológica</h1>
+        <div id="hex-animation-container"></div>
+        
+        <h1>Plataforma de Bienestar Psicológico</h1>
+        <p class="subtitle">Apoyo confidencial para el desarrollo y la salud mental en tu organización.</p>
     </header>
-    <main>
-        <a href="login.html" id="loginLink">Iniciar sesión</a>
-        <a href="registro.html" id="registerLink">Registrarse</a>
-    </main>
-    <script type="module">
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginLink = document.getElementById('loginLink');
-            const registerLink = document.getElementById('registerLink');
-            
-            loginLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.location.href = 'login.html';
-            });
-            
-            registerLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.location.href = 'registro.html';
-            });
-        });
-    </script>
-</body>
 
+    <main class="scroll-animate">
+        <a href="login.html" id="loginLink"><i class="fas fa-user"></i> Iniciar Sesión</a>
+        <a href="registro.html" id="registerLink"><i class="fas fa-user-plus"></i> Registrarse</a>
+    </main>
+
+    <section class="features-container" id="features">
+        <div class="card scroll-animate">
+            <div class="card-icon"><i class="fas fa-shield-halved"></i></div>
+            <h3>Atención Confidencial</h3>
+            <p>Espacio clínico seguro y privado para asesorías individuales, garantizando la total privacidad del usuario bajo estrictos códigos éticos.</p>
+        </div>
+
+        <div class="card scroll-animate">
+            <div class="card-icon"><i class="fas fa-chart-pie"></i></div>
+            <h3>Diagnóstico</h3>
+            <p>Generación de reportes estadísticos y métricas agregadas y anónimas para evaluar el clima psicoemocional de la organización.</p>
+        </div>
+
+        <div class="card scroll-animate">
+            <div class="card-icon"><i class="fas fa-person-chalkboard"></i></div>
+            <h3>Prevención y Talleres</h3>
+            <p>Acceso a programas formativos sobre manejo de estrés, prevención del burnout, desarrollo de resiliencia y salud en el entorno.</p>
+        </div>
+    </section>
+
+    <section class="benefits-section">
+        <h2 class="scroll-animate">Beneficios de la Atención Psicológica</h2>
+        <div class="benefits-grid">
+            <div class="benefit-item scroll-animate">
+                <div class="benefit-icon"><i class="fas fa-question-circle"></i></div>
+                <h3>¿Para qué sirve?</h3>
+                <p>Sirve como un espacio confidencial para explorar tus pensamientos y emociones, desarrollar herramientas para manejar el estrés académico y personal, y mejorar tus habilidades de comunicación y relación con los demás.</p>
+            </div>
+            <div class="benefit-item scroll-animate">
+                <div class="benefit-icon"><i class="fas fa-exclamation-circle"></i></div>
+                <h3>¿Por qué lo necesito?</h3>
+                <p>La vida universitaria presenta desafíos únicos. Necesitas apoyo para navegar la presión de los exámenes, la adaptación social y la planificación de tu futuro, asegurando que tu salud mental no afecte tu rendimiento y bienestar.</p>
+            </div>
+            <div class="benefit-item scroll-animate">
+                <div class="benefit-icon"><i class="fas fa-lightbulb"></i></div>
+                <h3>¿En qué me beneficia?</h3>
+                <p>Te beneficia al aumentar tu autoconocimiento y resiliencia. Aprenderás a gestionar la ansiedad, mejorar tu concentración y tomar decisiones más claras, lo que se traduce en un mejor desempeño académico y una vida personal más plena.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="quienes-somos" class="quienes-somos-section scroll-animate">
+        <video autoplay muted loop playsinline class="video-bg">
+            <source src="videos/footer-bg.mp4" type="video/mp4">
+            Tu navegador no soporta videos.
+        </video>
+        <div class="section-overlay"></div>
+        <div class="quienes-somos-content">
+            <h2>Comprometidos con tu Bienestar</h2>
+            <p>Innovasys es un portal de asistencia psicológica diseñado específicamente para la comunidad universitaria. Entendemos los desafíos únicos que enfrentan los estudiantes y docentes, y ofrecemos un espacio seguro, confidencial y profesional para fomentar el desarrollo personal y la salud mental.</p>
+            <div class="quienes-somos-stats">
+                <div class="stat">
+                    <strong>+10</strong>
+                    <span>Instituciones Aliadas</span>
+                </div>
+                <div class="stat">
+                    <strong>+5,000</strong>
+                    <span>Estudiantes Atendidos</span>
+                </div>
+                <div class="stat">
+                    <strong>98%</strong>
+                    <span>De Satisfacción</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="blog-section" class="blog-section-container scroll-animate">
+        <h2>Artículos y Recursos</h2>
+        <p class="subtitle">Explora artículos sobre bienestar, salud mental y vida universitaria.</p>
+        <div class="blog-grid">
+            <div class="blog-card">
+                <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Estudiante manejando el estrés con técnicas de mindfulness" class="blog-card-img">
+                <div class="blog-card-content">
+                    <span class="blog-category">Técnicas de Estudio</span>
+                    <h3>Mindfulness para controlar el estrés y la ansiedad en los estudios</h3>
+                    <a href="https://www.universia.net/es/actualidad/vida-universitaria/mindfulness-controlar-estres-ansiedad-estudios-1163701.html" target="_blank" class="blog-read-more">Leer más <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="blog-card">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHNWNBvbzosgFJBCMod4OmthiHLi0aNhvU5Q&s" alt="Persona durmiendo plácidamente" class="blog-card-img">
+                <div class="blog-card-content">
+                    <span class="blog-category">Salud y Bienestar</span>
+                    <h3>La Importancia del Sueño para el Rendimiento Académico</h3>
+                    <a href="https://www.udep.edu.pe/hoy/2021/09/la-importancia-del-sueno-en-el-rendimiento-academico/" target="_blank" class="blog-read-more">Leer más <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="blog-card">
+                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Grupo de estudiantes universitarios socializando" class="blog-card-img">
+                <div class="blog-card-content">
+                    <span class="blog-category">Vida Universitaria</span>
+                    <h3>Soledad en la universidad: qué hacer si te sientes solo</h3>
+                    <a href="https://www.formacionyestudios.com/soledad-en-la-universidad-que-hacer-si-te-sientes-solo.html" target="_blank" class="blog-read-more">Leer más <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer scroll-animate">
+        <div class="footer-grid">
+            <div class="footer-column">
+                <h3>Navegación</h3>
+                <ul>
+                    <li><a href="info.html#servicios">Psicologos</a></li>
+                    <li><a href="info.html#quienes-somos">Quiénes Somos</a></li>
+                    <li><a href="info.html#blogs">Blogs</a></li>
+                    <li><a href="#" id="privacyLinkFooter">Políticas de Privacidad</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Soporte</h3>
+                <ul>
+                    <li><a href="info.html#ayuda">Ayuda</a></li>
+                    <li><a href="info.html#ayuda">Contacto</a></li>
+                    <li><a href="#">Reportar un problema</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Innovasys. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <div id="legalModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Aviso de Privacidad y Términos de Uso</h2>
+        <div class="legal-text">
+            <h3>1. Identidad y Domicilio</h3>
+            <p>El Sistema de Atención Psicológica (en adelante "La Institución"), es el responsable del tratamiento y protección de sus datos personales, en estricto apego a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).</p>
+
+            <h3>2. Datos Personales Sensibles</h3>
+            <p>Para cumplir con las finalidades de atención clínica, recabaremos datos personales sensibles, incluyendo estado de salud mental, historial clínico, emocional y familiar. Estos datos gozan de la más alta protección y confidencialidad, alineados a la NOM-004-SSA3-2012 del Expediente Clínico.</p>
+
+            <h3>3. Finalidad del Tratamiento de Datos</h3>
+            <p>Su información será utilizada exclusivamente para: la apertura de su expediente clínico, seguimiento de tratamiento psicológico, prevención de riesgos psicosociales y generación de estadísticas institucionales completamente anonimizadas.</p>
+
+            <h3>4. Confidencialidad y Secreto Profesional</h3>
+            <p>Toda la información vertida en la plataforma y durante las sesiones está amparada por el secreto profesional. Solo podrá ser revelada bajo mandato judicial expreso o en caso de riesgo inminente para la vida del usuario o de terceros, conforme a la legislación vigente.</p>
+
+            <h3>5. Derechos ARCO</h3>
+            <p>Usted tiene derecho a conocer qué datos tenemos (Acceso), solicitar su corrección (Rectificación), pedir su eliminación cuando considere que no se requieren (Cancelación), u oponerse al uso de los mismos (Oposición). Para ejercer estos derechos, debe contactar a la administración del portal.</p>
+
+            <h3>6. Aceptación de Términos</h3>
+            <p>Al hacer clic en "Aceptar", usted otorga su consentimiento expreso para el tratamiento de sus datos personales y sensibles bajo los términos aquí descritos, y confirma que el uso de esta plataforma es voluntario.</p>
+        </div>
+        <button id="acceptTermsBtn" class="accept-btn">He leído y acepto los términos</button>
+    </div>
+</div>
+
+</body>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.2/vanilla-tilt.min.js"></script>
+<script src="animations.js"></script>
+<script src="terminos.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const navToggle = document.querySelector('.nav-toggle');
+        const navLinks = document.querySelector('.nav-links');
+
+        if (navToggle && navLinks) {
+            navToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                navToggle.classList.toggle('active');
+            });
+        }
+    });
+</script>
 </html>
