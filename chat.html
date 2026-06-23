@@ -2,17 +2,105 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="styles-index.css">
     <link rel="stylesheet" href="styles-chat.css">
-    <title>Chat UTC - Comunidad</title>
+    <title>Chat - Innovasys</title>
+    <style>
+        .nav-toggle {
+            display: none;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            padding: 0;
+        }
+        .hamburger {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            position: relative;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .hamburger::before,
+        .hamburger::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            transition: transform 0.3s ease-in-out;
+        }
+        .hamburger::before {
+            top: -8px;
+        }
+        .hamburger::after {
+            bottom: -8px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background-color: #fff;
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .nav-links li {
+                padding: 1rem 0;
+                width: 100%;
+                text-align: center;
+            }
+            .nav-toggle {
+                display: block;
+            }
+            .top-nav {
+                position: relative;
+            }
+        }
+
+        .nav-toggle.active .hamburger {
+            background-color: transparent;
+        }
+        .nav-toggle.active .hamburger::before {
+            transform: translateY(8px) rotate(45deg);
+        }
+        .nav-toggle.active .hamburger::after {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+    </style>
 </head>
 <body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <a href="index.html"><img src="logomain.png" alt="Logo Plataforma Psicológica" class="nav-logo"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" id="backToPortalBtn">Volver al Portal</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+    </nav>
+    <div id="hex-animation-container"></div>
+
     <div class="chat-container">
         <div class="users-sidebar">
             <div class="user-profile" id="userProfile">
                 <h3 id="userName">Cargando...</h3>
                 <p id="userRole">Usuario</p>
-                 <button class="back-to-home" id="backToHomeBtn">Volver al Portal</button>
                 <div class="user-stats" id="userStats">
                     <div class="stat-item">
                         <div class="stat-value" id="totalUsers">0</div>
@@ -49,7 +137,7 @@
         <div class="chat-main">
             <div class="chat-header" id="chatHeader" style="display: none;">
                 <div class="chat-header-info">
-                    <button id="backMobileBtn">←</button>
+                    <button id="backMobileBtn"><i class="fas fa-arrow-left"></i></button>
                     <h2 id="chatWith">Selecciona un usuario</h2>
                     <p id="chatStatus">para comenzar a chatear</p>
                 </div>
@@ -62,7 +150,7 @@
             <div class="messages-area" id="messagesArea">
                 <div class="no-chat-selected">
                     <h3>👋 ¡Bienvenido al Chat UTC!</h3>
-                    <p>Selecciona un usuario de la lista para comenzar a chatear</p>
+                    <p>Selecciona un contacto de la lista para comenzar a conversar.</p>
                     <p style="font-size: 48px; margin: 20px;">💬</p>
                 </div>
             </div>
@@ -78,10 +166,10 @@
                 </div>
                 
                 <div class="input-container" id="normalInput">
-                    <button class="voice-record-btn" id="recordBtn">🎤</button>
-                    <button class="attach-btn" id="attachBtn">📎</button>
+                    <button class="attach-btn" id="attachBtn" title="Adjuntar archivo"><i class="fas fa-paperclip"></i></button>
                     <input type="text" class="message-input" id="messageInput" placeholder="Escribe un mensaje...">
-                    <button class="send-btn" id="sendBtn">➤</button>
+                    <button class="voice-record-btn" id="recordBtn" title="Grabar mensaje de voz"><i class="fas fa-microphone"></i></button>
+                    <button class="send-btn" id="sendBtn" title="Enviar mensaje"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
         </div>
@@ -93,9 +181,9 @@
             <video id="localVideo" autoplay playsinline muted></video>
             
             <div class="call-controls">
-                <button id="muteAudioBtn" title="Silenciar/Activar audio">🔇</button>
-                <button id="muteVideoBtn" title="Ocultar/Mostrar video">🎥</button>
-                <button id="endCallBtn" title="Terminar llamada">🔴</button>
+                <button id="muteAudioBtn" title="Silenciar/Activar audio"><i class="fas fa-microphone-slash"></i></button>
+                <button id="muteVideoBtn" title="Ocultar/Mostrar video"><i class="fas fa-video-slash"></i></button>
+                <button id="endCallBtn" title="Terminar llamada"><i class="fas fa-phone-slash"></i></button>
             </div>
             
             <button id="closeCallBtn">&times;</button>
@@ -104,19 +192,18 @@
 
     <script type="module">
         // ===== FIX PARA CELULAR Y SCROLL =====
+        function scrollToBottom(){
+            const messagesArea = document.getElementById("messagesArea");
+            if(messagesArea){
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }
+        }
 
-function scrollToBottom(){
-    const messagesArea = document.getElementById("messagesArea");
-    if(messagesArea){
-        messagesArea.scrollTop = messagesArea.scrollHeight;
-    }
-}
-
-window.addEventListener("resize", () => {
-    scrollToBottom();
-});
+        window.addEventListener("resize", () => {
+            scrollToBottom();
+        });
         
-        import { db } from './conexion.js';
+        import { db } from 'conexion.js';
         import { 
             collection, 
             query, 
@@ -163,60 +250,67 @@ window.addEventListener("resize", () => {
             ]
         };
         
-      // Inicialización
-document.addEventListener('DOMContentLoaded', function() {
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
+            
+            if (!userData) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = userData;
+            
+            document.getElementById('userName').textContent = userData.nombre;
+            document.getElementById('userRole').textContent = 
+                userData.tipo_usuario === 'estudiante' ? 'Estudiante' : 'Docente';
+            
+            loadUsers();
+            listenForIncomingCalls();
 
-    const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
-    
-    if (!userData) {
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    currentUser = userData;
-    
-    document.getElementById('userName').textContent = userData.nombre;
-    document.getElementById('userRole').textContent = 
-        userData.tipo === 'estudiante' ? 'Estudiante' : 'Docente';
-    
-    loadUsers();
-    listenForIncomingCalls();
+            // BOTON VOLVER EN MOVIL
+            const backBtn = document.getElementById("backMobileBtn");
+            if(backBtn){
+                backBtn.addEventListener("click", function(){
+                    document.querySelector(".chat-main").classList.remove("active");
+                });
+            }
 
-    // BOTON VOLVER EN MOVIL
-    const backBtn = document.getElementById("backMobileBtn");
-    if(backBtn){
-        backBtn.addEventListener("click", function(){
-            document.querySelector(".chat-main").classList.remove("active");
+            // ===== 🔥 BOTÓN VOLVER AL PORTAL (CORREGIDO) =====
+            document.getElementById('backToPortalBtn').addEventListener('click', function() {
+                // 🔥 Usar 'tipo_usuario' correctamente
+                const tipo = userData.tipo_usuario || userData.tipo || 'alumno';
+                if (tipo === 'estudiante' || tipo === 'alumno') {
+                    window.location.href = 'student.html';
+                } else {
+                    window.location.href = 'admin.html';
+                }
+            });
+
+            // Event listeners
+            document.getElementById('searchUser').addEventListener('input', filterUsers);
+            document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
+            document.getElementById('audioCallBtn').addEventListener('click', startAudioCall);
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            document.getElementById('recordBtn').addEventListener('click', startRecording);
+            document.getElementById('sendRecordingBtn').addEventListener('click', stopAndSendRecording);
+            document.getElementById('cancelRecordingBtn').addEventListener('click', cancelRecording);
+            document.getElementById('attachBtn').addEventListener('click', attachFile);
+
+            // Controles de llamada
+            document.getElementById('muteAudioBtn').addEventListener('click', toggleAudio);
+            document.getElementById('muteVideoBtn').addEventListener('click', toggleVideo);
+            document.getElementById('endCallBtn').addEventListener('click', endCall);
+            document.getElementById('closeCallBtn').addEventListener('click', endCall);
         });
-    }
 
-    // Event listeners
-    document.getElementById('searchUser').addEventListener('input', filterUsers);
-    document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
-    document.getElementById('audioCallBtn').addEventListener('click', startAudioCall);
-    document.getElementById('sendBtn').addEventListener('click', sendMessage);
-
-    document.getElementById('messageInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendMessage();
-    });
-
-    document.getElementById('recordBtn').addEventListener('click', startRecording);
-    document.getElementById('sendRecordingBtn').addEventListener('click', stopAndSendRecording);
-    document.getElementById('cancelRecordingBtn').addEventListener('click', cancelRecording);
-    document.getElementById('attachBtn').addEventListener('click', attachFile);
-
-    document.getElementById('backToHomeBtn').addEventListener('click', function() {
-        window.location.href = currentUser.tipo === 'estudiante' ? 'student.html' : 'admin.html';
-    });
-
-    // Controles de llamada
-    document.getElementById('muteAudioBtn').addEventListener('click', toggleAudio);
-    document.getElementById('muteVideoBtn').addEventListener('click', toggleVideo);
-    document.getElementById('endCallBtn').addEventListener('click', endCall);
-    document.getElementById('closeCallBtn').addEventListener('click', endCall);
-
-});
-        
         // ==================== FUNCIONES DEL CHAT ====================
         
         async function loadUsers() {
@@ -265,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let html = '';
             
             const docentes = users.filter(u => u.tipo_usuario === 'docente');
-            const estudiantes = users.filter(u => u.tipo_usuario === 'estudiante');
+            const estudiantes = users.filter(u => u.tipo_usuario === 'estudiante' || u.tipo_usuario === 'alumno');
             
             if (docentes.length > 0) {
                 html += `<div style="padding: 10px 15px; background: #e9ecef; font-weight: 600;">👨‍🏫 Docentes (${docentes.length})</div>`;
@@ -295,12 +389,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const roleClass = user.tipo_usuario === 'docente' ? 'role-docente' : 'role-estudiante';
             const iniciales = user.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
             const especialidad = user.tipo_usuario === 'estudiante' ? user.carrera : user.departamento;
+            const roleName = user.tipo_usuario === 'docente' ? 'Docente' : 'Estudiante';
             
             return `
                 <div class="user-item ${isSelected}" 
                      data-id="${user.id}" 
                      data-name="${user.nombre}" 
-                     data-role="${user.tipo_usuario === 'docente' ? 'Docente' : 'Estudiante'}" 
+                     data-role="${roleName}" 
                      data-specialty="${especialidad || 'No especificado'}">
                     <div class="user-avatar">
                         ${iniciales || '👤'}
@@ -309,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="user-info">
                         <div class="user-name">
                             ${user.nombre}
-                            <span class="user-role-badge ${roleClass}">${user.tipo_usuario === 'docente' ? 'Docente' : 'Estudiante'}</span>
+                            <span class="user-role-badge ${roleClass}">${roleName}</span>
                         </div>
                         <div class="user-detail">
                             <span>${especialidad || 'No especificado'}</span>
@@ -336,76 +431,69 @@ document.addEventListener('DOMContentLoaded', function() {
             displayUsers(filtered);
         }
         
-        // --- FUNCIÓN CORREGIDA ---
-       function selectUser(userId, userName, userRole, userSpecialty) {
+        function selectUser(userId, userName, userRole, userSpecialty) {
+            selectedUserId = userId;
+            selectedUserName = userName;
 
-    selectedUserId = userId;
-    selectedUserName = userName;
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('chatInputArea').style.display = 'flex';
 
-    document.getElementById('chatHeader').style.display = 'flex';
-    document.getElementById('chatInputArea').style.display = 'flex';
+            document.getElementById('chatWith').textContent = userName;
+            document.getElementById('chatStatus').textContent = `${userRole} • ${userSpecialty}`;
 
-    document.getElementById('chatWith').textContent = userName;
-    document.getElementById('chatStatus').textContent = `${userRole} • ${userSpecialty}`;
-
-    const noChatWelcome = document.querySelector('.no-chat-selected');
-    if (noChatWelcome) {
-        noChatWelcome.style.display = 'none';
-    }
-
-    document.querySelectorAll('.user-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.id === userId) {
-            item.classList.add('active');
-        }
-    });
-
-    // ⭐ ESTA LINEA ABRE EL CHAT EN MOVIL
-    document.querySelector(".chat-main").classList.add("active");
-
-    loadMessages();
-}
-        
-        function loadMessages() {
-
-    if (!selectedUserId) return;
-
-    if (unsubscribeMessages) {
-        unsubscribeMessages();
-    }
-
-    const mensajesRef = collection(db, "mensajes");
-
-    const q = query(
-        mensajesRef,
-        orderBy("fecha_envio", "asc")
-    );
-
-    unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
-
-        const messages = [];
-
-        querySnapshot.forEach((doc) => {
-
-            const data = doc.data();
-
-            const esConversacion =
-                (data.id_remitente === currentUser.id && data.id_destinatario === selectedUserId) ||
-                (data.id_remitente === selectedUserId && data.id_destinatario === currentUser.id);
-
-            if (esConversacion) {
-                messages.push({
-                    id: doc.id,
-                    ...data
-                });
+            const noChatWelcome = document.querySelector('.no-chat-selected');
+            if (noChatWelcome) {
+                noChatWelcome.style.display = 'none';
             }
 
-        });
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.id === userId) {
+                    item.classList.add('active');
+                }
+            });
 
-        displayMessages(messages);
-    });
+            document.querySelector(".chat-main").classList.add("active");
 
-}
+            loadMessages();
+        }
+        
+        function loadMessages() {
+            if (!selectedUserId) return;
+
+            if (unsubscribeMessages) {
+                unsubscribeMessages();
+            }
+
+            const mensajesRef = collection(db, "mensajes");
+
+            const q = query(
+                mensajesRef,
+                orderBy("fecha_envio", "asc")
+            );
+
+            unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
+                const messages = [];
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+
+                    const esConversacion =
+                        (data.id_remitente === currentUser.id && data.id_destinatario === selectedUserId) ||
+                        (data.id_remitente === selectedUserId && data.id_destinatario === currentUser.id);
+
+                    if (esConversacion) {
+                        messages.push({
+                            id: doc.id,
+                            ...data
+                        });
+                    }
+
+                });
+
+                displayMessages(messages);
+            });
+        }
         
         function displayMessages(messages) {
             const messagesArea = document.getElementById('messagesArea');
@@ -866,10 +954,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (unsubscribeIceCandidates) unsubscribeIceCandidates();
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+    
+            if (navToggle && navLinks) {
+                navToggle.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-
-
 
 
 
