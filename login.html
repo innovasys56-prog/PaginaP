@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/styles-index.css">
+    <link rel="stylesheet" href="css/styles-login.css">
+    <title>Iniciar Sesión - Innovasys</title>
+    
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <a href="index.html"><img src="items/logomain.png" alt="Logo Plataforma Psicológica" class="nav-logo"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="info.html#servicios">Servicios</a></li>
+            <li><a href="info.html#quienes-somos">Quiénes Somos</a></li>
+            <li><a href="info.html#blogs">Blogs</a></li>
+            <li><a href="info.html#ayuda">Ayuda</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+    </nav>
+    <div id="hex-animation-container"></div>
+
+    <main class="form-container">
+        <h1>Iniciar Sesión</h1>
+        <p class="subtitle">Accede a tu portal de bienestar.</p>
+
+        <form id="loginForm" novalidate>
+            <div class="form-group">
+                <label for="correo">Correo Institucional</label>
+                <input type="email" id="correo" name="correo" required placeholder="tu.correo@institucion.edu">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••">
+                <i class="fas fa-eye password-toggle"></i>
+            </div>
+            
+            <div id="mensajeError" class="error hidden"></div>
+            
+            <button type="submit" id="submitBtn">Ingresar</button>
+            
+            <div class="form-footer">
+                <span>¿No tienes una cuenta? <a href="registro.html">Regístrate aquí</a></span>
+                <a href="index.html" class="home-link">Volver al inicio</a>
+            </div>
+        </form>
+    </main>
+
+    <script src="js/animations.js"></script>
+
+   <script type="module">
+        import { db } from './js/conexion.js';
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.querySelectorAll('.password-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const passwordInput = toggle.closest('.form-group').querySelector('input');
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggle.classList.remove('fa-eye');
+                    toggle.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    toggle.classList.remove('fa-eye-slash');
+                    toggle.classList.add('fa-eye');
+                }
+            });
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const mensajeError = document.getElementById('mensajeError');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            mensajeError.textContent = '';
+            mensajeError.classList.add('hidden');
+            
+            submitBtn.textContent = "Verificando...";
+            submitBtn.disabled = true;
+            
+            try {
+                const correo = formData.get('correo');
+                const password = formData.get('password');
+                
+                if (!correo || !password) {
+                    throw new Error('Todos los campos son obligatorios');
+                }
+                
+                const usuariosRef = collection(db, "usuarios");
+                const q = query(usuariosRef, where("correo", "==", correo));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    throw new Error('Correo o contraseña incorrectos');
+                }
+                
+                const usuarioDoc = querySnapshot.docs[0];
+                const usuario = usuarioDoc.data();
+                
+                if (usuario.password !== password) {
+                    throw new Error('Correo o contraseña incorrectos');
+                }
+                
+                // ===== GUARDAR TODOS LOS DATOS DEL USUARIO EN LA SESIÓN =====
+                const userData = {
+                    id: usuarioDoc.id,
+                    // Datos personales
+                    nombre: usuario.nombre || '',
+                    correo: usuario.correo || '',
+                    telefono: usuario.telefono || '',
+                    password: usuario.password || '',
+                    fecha_nacimiento: usuario.fecha_nacimiento || '',
+                    edad: usuario.edad || '',
+                    estado_civil: usuario.estado_civil || '',
+                    tel_emergencia: usuario.tel_emergencia || '',
+                    contacto_parentesco: usuario.contacto_parentesco || '',
+                    
+                    // Motivo de consulta
+                    motivo_consulta: usuario.motivo_consulta || '',
+                    
+                    // Antecedentes Familiares
+                    antecedentes_familiares: usuario.antecedentes_familiares || {
+                        diabetes: 'NO', diabetes_esp: '',
+                        nefropatas: 'NO', nefropatas_esp: '',
+                        hipertension: 'NO', hipertension_esp: '',
+                        malformaciones: 'NO', malformaciones_esp: '',
+                        cancer: 'NO', cancer_esp: '',
+                        cardiopatas: 'NO', cardiopatas_esp: '',
+                        otros: ''
+                    },
+                    
+                    // Antecedentes No Patológicos
+                    no_patologicos: usuario.no_patologicos || {
+                        tabaquismo: 'NO', tabaquismo_cantidad: '', tabaquismo_anos: '', tabaquismo_tipo: '',
+                        alcoholismo: 'NO', alcohol_ml: '', alcohol_anos: '',
+                        alergias: '', tipo_sanguineo: '', vivienda: '', farmacodependencia: ''
+                    },
+                    
+                    // Antecedentes Patológicos
+                    patologicos: usuario.patologicos || {
+                        enfermedades_infancia: '', secuelas: '',
+                        hospitalizaciones: 'NO', hospitalizaciones_esp: '',
+                        quirurgicos: 'NO', quirurgicos_esp: '',
+                        transfusiones: 'NO', transfusiones_esp: '',
+                        traumatismos: 'NO', traumatismos_esp: ''
+                    },
+                    
+                    // Historia Evolutiva
+                    historia_evolutiva: usuario.historia_evolutiva || {
+                        embarazo_condiciones: '', tipo_parto: '',
+                        complicaciones_nacer: '', peso_talla: '', lactancia: ''
+                    },
+                    
+                    // Enfermedad Actual
+                    enfermedad_actual: usuario.enfermedad_actual || '',
+                    
+                    // Tipo de usuario y metadata
+                    tipo: usuario.tipo_usuario || 'alumno',
+                    fecha_registro: usuario.fecha_registro || ''
+                };
+                
+                // Guardar en sessionStorage
+                sessionStorage.setItem('usuario_actual', JSON.stringify(userData));
+                
+                // Redirigir según el tipo de usuario
+                setTimeout(() => {
+                    if (userData.tipo === 'docente') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'student.html';
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                mensajeError.textContent = error.message;
+                mensajeError.classList.remove('hidden');
+            } finally {
+                submitBtn.textContent = "Ingresar";
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+    
+            if (navToggle && navLinks) {
+                navToggle.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
