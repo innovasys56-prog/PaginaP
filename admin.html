@@ -8,8 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="styles-index.css">
-    <link rel="stylesheet" href="styles-admin.css">
+    <link rel="stylesheet" href="css/styles-index.css">
+    <link rel="stylesheet" href="css/styles-admin.css">
+    <link rel="stylesheet" href="css/styles-horarios.css">
     <style>
         /* ===== MENÚ HAMBURGUESA ===== */
         .nav-toggle {
@@ -62,7 +63,7 @@
         .nav-toggle.active .hamburger::before { transform: translateY(8px) rotate(45deg); }
         .nav-toggle.active .hamburger::after { transform: translateY(-8px) rotate(-45deg); }
 
-        /* ===== ESTILOS MEJORADOS PARA CREAR PUBLICACIÓN ===== */
+        /* ===== ESTILOS PARA CREAR PUBLICACIÓN ===== */
         .create-post-section {
             background: linear-gradient(145deg, #ffffff, #f8fafc);
             border-radius: var(--border-radius);
@@ -257,7 +258,6 @@
         }
 
         .post-form .btn-publish:hover::before { left: 100%; }
-
         .post-form .btn-publish:disabled {
             opacity: 0.7;
             cursor: not-allowed;
@@ -419,6 +419,7 @@
             padding: 2px 10px;
             border-radius: 12px;
             font-weight: 500;
+            cursor: pointer;
         }
 
         .agenda-item .info .detalles {
@@ -510,7 +511,10 @@
             margin: 0 auto 15px;
         }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* ===== MODAL PARA VER EXPEDIENTE ===== */
         .expediente-modal {
@@ -553,7 +557,6 @@
             cursor: pointer;
             padding: 10px;
             z-index: 10;
-            transition: color 0.3s ease;
         }
 
         .expediente-modal-content .modal-close:hover { color: #E53E3E; }
@@ -609,9 +612,7 @@
         .expediente-item .label { color: var(--text-muted); font-weight: 500; }
         .expediente-item .value { color: var(--text-color); font-weight: 500; text-align: right; }
 
-        .expediente-full {
-            grid-column: 1 / -1;
-        }
+        .expediente-full { grid-column: 1 / -1; }
 
         .expediente-full .expediente-item {
             justify-content: flex-start;
@@ -685,20 +686,14 @@
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .expediente-grid {
-                grid-template-columns: 1fr;
-            }
-            .expediente-full {
-                grid-column: 1;
-            }
+            .expediente-grid { grid-template-columns: 1fr; }
+            .expediente-full { grid-column: 1; }
             .expediente-item {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 2px;
             }
-            .expediente-item .value {
-                text-align: left;
-            }
+            .expediente-item .value { text-align: left; }
             .create-post-section { padding: 20px; }
             .create-post-section .section-header { flex-wrap: wrap; }
             .create-post-section .section-header .badge-new {
@@ -725,10 +720,9 @@
 <body>
     <nav class="top-nav">
         <div class="nav-brand">
-            <a href="index.html"><img src="logomain.png" alt="Logo Innovasys" class="nav-logo"></a>
+            <a href="index.html"><img src="items/logomain.png" alt="Logo Innovasys" class="nav-logo"></a>
         </div>
         <ul class="nav-links">
-            
             <li><a href="info.html#quienes-somos">Quienes Somos</a></li>
             <li><a href="info.html#blogs">Artículos y Blogs</a></li>
             <li><a href="info.html#ayuda">Soporte y Ayuda</a></li>
@@ -775,9 +769,14 @@
                 </div>
                 
                 <button class="chat-btn" id="chatBtn"><i class="fas fa-comments"></i> Ir al Chat de la Comunidad</button>
+                
+                <!-- NUEVO: Botón para gestionar horarios -->
+                <button class="btn-gestionar-horarios" id="btnGestionarHorarios">
+                    <i class="fas fa-clock"></i> Gestionar Horarios de Atención
+                </button>
             </div>
             
-            <!-- ===== SECCIÓN DE PUBLICACIONES MEJORADA ===== -->
+            <!-- ===== SECCIÓN DE PUBLICACIONES ===== -->
             <div class="create-post-section">
                 <div class="section-header">
                     <i class="fas fa-pen-fancy"></i>
@@ -906,9 +905,34 @@
         </div>
     </div>
 
-    <script src="animations.js"></script>
+    <!-- ===== MODAL PARA GESTIONAR HORARIOS ===== -->
+    <div class="horarios-modal" id="horariosModal">
+        <div class="horarios-modal-content">
+            <button class="modal-close" id="horariosClose">&times;</button>
+            <h2><i class="fas fa-clock"></i> Gestionar Horarios de Atención</h2>
+            <p class="subtitle-modal">Define tus días y horas de atención. Los estudiantes podrán ver tus horarios disponibles al agendar citas.</p>
+
+            <div id="horariosAlertSuccess" class="alert alert-success hidden"></div>
+            <div id="horariosAlertError" class="alert alert-error hidden"></div>
+
+            <div id="horariosLoading" class="loading-spinner hidden">
+                <div class="spinner"></div>
+                <p>Cargando horarios...</p>
+            </div>
+
+            <div id="horariosContainer">
+                <!-- Se llena con JavaScript -->
+            </div>
+
+            <button id="btnGuardarHorarios" class="btn-guardar-horarios">
+                <i class="fas fa-save"></i> Guardar Horarios
+            </button>
+        </div>
+    </div>
+
+    <script src="js/animations.js"></script>
     <script type="module">
-        import { db } from './conexion.js';
+        import { db } from './js/conexion.js';
         import { 
             collection, 
             addDoc, 
@@ -918,12 +942,20 @@
             updateDoc,
             doc,
             onSnapshot,
-            getDoc
+            getDoc,
+            setDoc,
+            deleteDoc
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         let currentUserData = null;
         let unsubscribeCitas = null;
         let todasLasCitas = [];
+        let horariosData = {};
+        let horariosOriginales = {};
+        let hasChanges = false;
+
+        // Días de la semana
+        const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
         document.addEventListener('DOMContentLoaded', function() {
             const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
@@ -943,6 +975,7 @@
                 document.getElementById('profilePicture').textContent = initials;
 
                 cargarCitasEnVivo(userData.id);
+                cargarHorarios(userData.id);
             } else {
                 alert('Por favor inicie sesión primero');
                 window.location.href = 'index.html';
@@ -997,7 +1030,29 @@
             document.getElementById('chatBtn').addEventListener('click', function() {
                 window.location.href = 'chat.html';
             });
-            
+
+            // ===== BOTÓN GESTIONAR HORARIOS =====
+            document.getElementById('btnGestionarHorarios').addEventListener('click', function() {
+                abrirModalHorarios();
+            });
+
+            // ===== CERRAR MODAL HORARIOS =====
+            document.getElementById('horariosClose').addEventListener('click', function() {
+                cerrarModalHorarios();
+            });
+
+            document.getElementById('horariosModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    cerrarModalHorarios();
+                }
+            });
+
+            // ===== GUARDAR HORARIOS =====
+            document.getElementById('btnGuardarHorarios').addEventListener('click', function() {
+                guardarHorarios();
+            });
+
+            // ===== FORMULARIO DE PUBLICACIONES =====
             document.getElementById('postForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 hideAlerts();
@@ -1077,6 +1132,177 @@
                 }
             });
         });
+
+        // ===== FUNCIONES DE HORARIOS =====
+        async function cargarHorarios(psicologoId) {
+            try {
+                const horarioRef = doc(db, "horarios", psicologoId);
+                const horarioSnap = await getDoc(horarioRef);
+                
+                if (horarioSnap.exists()) {
+                    horariosData = horarioSnap.data();
+                    horariosOriginales = JSON.parse(JSON.stringify(horariosData));
+                } else {
+                    // Crear estructura por defecto
+                    horariosData = {};
+                    DIAS.forEach(dia => {
+                        horariosData[dia] = {
+                            activo: false,
+                            horas: []
+                        };
+                    });
+                    horariosOriginales = JSON.parse(JSON.stringify(horariosData));
+                }
+                
+                renderHorarios();
+            } catch (error) {
+                console.error('Error cargando horarios:', error);
+            }
+        }
+
+        function renderHorarios() {
+            const container = document.getElementById('horariosContainer');
+            let html = '<div class="horario-grid">';
+            
+            DIAS.forEach(dia => {
+                const diaData = horariosData[dia] || { activo: false, horas: [] };
+                const isActive = diaData.activo;
+                const horas = diaData.horas || [];
+                
+                html += `
+                    <div class="horario-dia-card ${!isActive ? 'deshabilitado' : ''}" data-dia="${dia}">
+                        <div class="dia-header">
+                            <h4>${dia}</h4>
+                            <div class="toggle-dia ${isActive ? 'active' : ''}" data-dia="${dia}"></div>
+                        </div>
+                        <div class="horas-container" data-dia="${dia}">
+                            ${horas.map((hora, index) => `
+                                <div class="hora-item" data-index="${index}">
+                                    <input type="time" value="${hora}" data-dia="${dia}" data-index="${index}">
+                                    <button class="btn-eliminar-hora" data-dia="${dia}" data-index="${index}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                            <button class="btn-agregar-hora" data-dia="${dia}">
+                                <i class="fas fa-plus"></i> Agregar hora
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+
+            // Eventos de los toggle
+            document.querySelectorAll('.toggle-dia').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const dia = this.dataset.dia;
+                    horariosData[dia].activo = !horariosData[dia].activo;
+                    hasChanges = true;
+                    renderHorarios();
+                });
+            });
+
+            // Eventos de agregar hora
+            document.querySelectorAll('.btn-agregar-hora').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const dia = this.dataset.dia;
+                    if (!horariosData[dia].horas) {
+                        horariosData[dia].horas = [];
+                    }
+                    horariosData[dia].horas.push('09:00');
+                    hasChanges = true;
+                    renderHorarios();
+                });
+            });
+
+            // Eventos de eliminar hora
+            document.querySelectorAll('.btn-eliminar-hora').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const dia = this.dataset.dia;
+                    const index = parseInt(this.dataset.index);
+                    horariosData[dia].horas.splice(index, 1);
+                    hasChanges = true;
+                    renderHorarios();
+                });
+            });
+
+            // Eventos de cambio de hora
+            document.querySelectorAll('.hora-item input[type="time"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    const dia = this.dataset.dia;
+                    const index = parseInt(this.dataset.index);
+                    horariosData[dia].horas[index] = this.value;
+                    hasChanges = true;
+                });
+            });
+        }
+
+        async function guardarHorarios() {
+            const btn = document.getElementById('btnGuardarHorarios');
+            const alertSuccess = document.getElementById('horariosAlertSuccess');
+            const alertError = document.getElementById('horariosAlertError');
+            
+            alertSuccess.classList.add('hidden');
+            alertError.classList.add('hidden');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            
+            try {
+                // Validar que no haya horarios duplicados por día
+                for (const dia of DIAS) {
+                    const horas = horariosData[dia]?.horas || [];
+                    const horasUnicas = new Set(horas);
+                    if (horas.length !== horasUnicas.size) {
+                        throw new Error(`El ${dia} tiene horas duplicadas. Por favor, revisa.`);
+                    }
+                }
+                
+                const horarioRef = doc(db, "horarios", currentUserData.id);
+                await setDoc(horarioRef, horariosData);
+                
+                horariosOriginales = JSON.parse(JSON.stringify(horariosData));
+                hasChanges = false;
+                
+                alertSuccess.textContent = '✅ ¡Horarios guardados exitosamente!';
+                alertSuccess.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    alertSuccess.classList.add('hidden');
+                }, 3000);
+                
+            } catch (error) {
+                alertError.textContent = '❌ Error: ' + error.message;
+                alertError.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Horarios';
+            }
+        }
+
+        function abrirModalHorarios() {
+            const modal = document.getElementById('horariosModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            renderHorarios();
+        }
+
+        function cerrarModalHorarios() {
+            if (hasChanges) {
+                if (!confirm('Tienes cambios sin guardar. ¿Estás seguro de que quieres cerrar?')) {
+                    return;
+                }
+                // Revertir cambios
+                horariosData = JSON.parse(JSON.stringify(horariosOriginales));
+                hasChanges = false;
+            }
+            const modal = document.getElementById('horariosModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
 
         // ===== FUNCIONES DE LA AGENDA =====
         function cargarCitasEnVivo(psicologoId) {
@@ -1190,7 +1416,6 @@
                     });
                 }
 
-                // También al hacer clic en toda la tarjeta (excepto botones)
                 item.addEventListener('click', function(e) {
                     if (e.target.closest('.acciones')) return;
                     const estudianteId = this.dataset.estudianteId;
@@ -1213,7 +1438,6 @@
                 const nombre = document.getElementById('expedienteNombre');
                 const info = document.getElementById('expedienteInfo');
 
-                // Mostrar loading
                 contenido.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
                         <div class="spinner"></div>
@@ -1223,7 +1447,6 @@
                 modal.classList.add('active');
                 document.body.style.overflow = 'hidden';
 
-                // Obtener datos del estudiante desde Firebase
                 const usuarioRef = doc(db, "usuarios", estudianteId);
                 const usuarioSnap = await getDoc(usuarioRef);
 
@@ -1241,7 +1464,6 @@
                 nombre.textContent = `Expediente de ${usuario.nombre || 'Estudiante'}`;
                 info.textContent = `Información clínica completa - ${usuario.correo || 'Sin correo'}`;
 
-                // ===== GENERAR HTML DEL EXPEDIENTE =====
                 let html = '';
 
                 // Motivo de consulta
