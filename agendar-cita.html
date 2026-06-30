@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/styles-index.css">
+    <link rel="stylesheet" href="css/agendar-cita.css">
+    <link rel="stylesheet" href="css/styles-horarios.css">
+    <title>Agendar Cita - Innovasys</title>
+    <style>
+        .nav-toggle {
+            display: none;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            padding: 0;
+        }
+        .hamburger {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            position: relative;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .hamburger::before,
+        .hamburger::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            transition: transform 0.3s ease-in-out;
+        }
+        .hamburger::before { top: -8px; }
+        .hamburger::after { bottom: -8px; }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background-color: #fff;
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            .nav-links.active { display: flex; }
+            .nav-links li { padding: 1rem 0; width: 100%; text-align: center; }
+            .nav-toggle { display: block; }
+            .top-nav { position: relative; }
+        }
+
+        .nav-toggle.active .hamburger { background-color: transparent; }
+        .nav-toggle.active .hamburger::before { transform: translateY(8px) rotate(45deg); }
+        .nav-toggle.active .hamburger::after { transform: translateY(-8px) rotate(-45deg); }
+
+        /* ===== ESTILOS PARA MODALIDAD ===== */
+        .modalidad-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .modalidad-option {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: 2px solid #E2E8F0;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: var(--white);
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .modalidad-option:hover:not(.disabled) {
+            border-color: var(--secondary-color);
+            background: rgba(66, 153, 225, 0.05);
+        }
+
+        .modalidad-option.selected {
+            border-color: var(--secondary-color);
+            background: rgba(66, 153, 225, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .modalidad-option.selected-presencial {
+            border-color: #10B981;
+            background: rgba(16, 185, 129, 0.1);
+            color: #065F46;
+        }
+
+        .modalidad-option.selected-virtual {
+            border-color: #8B5CF6;
+            background: rgba(139, 92, 246, 0.1);
+            color: #6D28D9;
+        }
+
+        .modalidad-option .icono {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .modalidad-option .label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .modalidad-option .sub-label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .modalidad-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* ===== INFO CONSULTORIO ===== */
+        .consultorio-info {
+            background: #F0FDF4;
+            border: 1px solid #86EFAC;
+            border-radius: var(--border-radius);
+            padding: 15px 20px;
+            margin-top: 10px;
+            display: none;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .consultorio-info.active {
+            display: block;
+        }
+
+        .consultorio-info h4 {
+            color: #065F46;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .consultorio-info p {
+            color: #065F46;
+            font-size: 0.95rem;
+            margin: 0;
+            padding-left: 28px;
+        }
+
+        .consultorio-info .direccion {
+            font-weight: 500;
+            color: #065F46;
+        }
+
+        .badge-modalidad {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .badge-presencial {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-virtual {
+            background: #EDE9FE;
+            color: #5B21B6;
+        }
+
+        .badge-mixto {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .badge-no-especificado {
+            background: #F3F4F6;
+            color: #6B7280;
+        }
+
+        /* ===== INDICADOR DE MODALIDAD EN CARDS ===== */
+        .modalidad-disponible {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .modalidad-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .modalidad-tag.presencial {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .modalidad-tag.virtual {
+            background: #EDE9FE;
+            color: #5B21B6;
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <a href="index.html"><img src="items/logomain.png" alt="Logo Innovasys" class="nav-logo"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="info.html#servicios">Servicios</a></li>
+            <li><a href="info.html#quienes-somos">Quiénes Somos</a></li>
+            <li><a href="info.html#blogs">Blogs</a></li>
+            <li><a href="info.html#ayuda">Ayuda</a></li>
+            <li><a href="#" id="logoutLinkNav">Cerrar Sesión</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+    </nav>
+    <div id="hex-animation-container"></div>
+
+    <div class="container-cita">
+        <h1><i class="fas fa-calendar-plus"></i> Agendar Cita</h1>
+        <p class="subtitle">Selecciona un psicólogo, elige la modalidad y la fecha para tu cita.</p>
+
+        <div id="alertSuccess" class="alert alert-success hidden"></div>
+        <div id="alertError" class="alert alert-error hidden"></div>
+        <div id="alertInfo" class="alert alert-info hidden"></div>
+
+        <div id="loadingPsicologos" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando psicólogos disponibles...</p>
+        </div>
+
+        <!-- Lista de psicólogos -->
+        <div id="psicologosContainer" class="psicologos-list hidden"></div>
+
+        <!-- Formulario de agendamiento -->
+        <form id="formCita" class="form-cita hidden">
+            <div class="form-group">
+                <label for="psicologoSeleccionado">Psicólogo seleccionado:</label>
+                <input type="text" id="psicologoSeleccionado" readonly style="background: #F7FAFC; font-weight: 600; color: var(--primary-color);">
+                <input type="hidden" id="psicologoId" value="">
+                <input type="hidden" id="consultorioPsicologo" value="">
+            </div>
+
+            <!-- 🔥 SECCIÓN: MODALIDAD DE ATENCIÓN -->
+            <div class="form-group" id="modalidadGroup">
+                <label for="modalidad">Modalidad de atención <span class="required">*</span></label>
+                <div class="modalidad-container" id="modalidadContainer">
+                    <div class="modalidad-option" data-modalidad="presencial" id="modalidadPresencial">
+                        <span class="icono">🏢</span>
+                        <span class="label">Presencial</span>
+                        <span class="sub-label">En consultorio</span>
+                    </div>
+                    <div class="modalidad-option" data-modalidad="virtual" id="modalidadVirtual">
+                        <span class="icono">💻</span>
+                        <span class="label">En línea</span>
+                        <span class="sub-label">Videollamada / Llamada</span>
+                    </div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                    <i class="fas fa-info-circle"></i> 
+                    Selecciona la modalidad que prefieras para tu cita
+                </div>
+            </div>
+
+            <!-- 🔥 SECCIÓN: INFO DEL CONSULTORIO (solo si hay consultorio) -->
+            <div class="consultorio-info" id="consultorioInfo">
+                <h4><i class="fas fa-location-dot"></i> Ubicación del consultorio</h4>
+                <p id="consultorioDireccion">Cargando dirección...</p>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fechaCita">Fecha de la cita:</label>
+                    <input type="date" id="fechaCita" min="">
+                </div>
+                <div class="form-group">
+                    <label for="horaCita">Hora de la cita:</label>
+                    <select id="horaCita">
+                        <option value="">Selecciona una hora</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Horarios disponibles del psicólogo -->
+            <div id="horariosDisponiblesContainer" class="horarios-disponibles hidden">
+                <h4><i class="fas fa-clock"></i> Horarios disponibles para esta fecha</h4>
+                <div id="horasDisponiblesGrid" class="horas-disponibles-grid">
+                    <!-- Se llena con JavaScript -->
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="motivoCita">Motivo de la cita:</label>
+                <select id="motivoCita">
+                    <option value="Estrés académico">Estrés académico</option>
+                    <option value="Ansiedad">Ansiedad</option>
+                    <option value="Depresión">Depresión</option>
+                    <option value="Problemas de sueño">Problemas de sueño</option>
+                    <option value="Problemas de relación">Problemas de relación</option>
+                    <option value="Orientación vocacional">Orientación vocacional</option>
+                    <option value="Bajo rendimiento">Bajo rendimiento académico</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-check-circle"></i> Agendar Cita
+            </button>
+        </form>
+
+        <div style="margin-top: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="student.html" class="btn-volver"><i class="fas fa-arrow-left"></i> Volver al Portal</a>
+        </div>
+    </div>
+
+    <script src="js/animations.js"></script>
+
+    <script type="module">
+        import { db } from './js/conexion.js';
+        import { 
+            collection, 
+            query, 
+            where, 
+            getDocs, 
+            addDoc,
+            doc,
+            getDoc,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
+            
+            if (!userData) {
+                alert('Por favor inicie sesión primero');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.querySelector('.subtitle').textContent = `Bienvenido, ${userData.nombre}`;
+
+            cargarPsicologos();
+
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaCita').min = hoy;
+
+            document.getElementById('logoutLinkNav').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem('usuario_actual');
+                window.location.href = 'index.html';
+            });
+
+            document.getElementById('fechaCita').addEventListener('change', function() {
+                const psicologoId = document.getElementById('psicologoId').value;
+                if (psicologoId && this.value) {
+                    cargarHorariosDisponibles(psicologoId, this.value);
+                }
+            });
+
+            // 🔥 Eventos para selección de modalidad
+            document.querySelectorAll('.modalidad-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    if (this.classList.contains('disabled')) return;
+                    
+                    // Remover selección de todas
+                    document.querySelectorAll('.modalidad-option').forEach(o => {
+                        o.classList.remove('selected', 'selected-presencial', 'selected-virtual');
+                    });
+                    
+                    // Agregar selección a la opción elegida
+                    this.classList.add('selected');
+                    if (this.dataset.modalidad === 'presencial') {
+                        this.classList.add('selected-presencial');
+                    } else {
+                        this.classList.add('selected-virtual');
+                    }
+                    
+                    // Mostrar/ocultar info del consultorio
+                    const consultorioInfo = document.getElementById('consultorioInfo');
+                    const consultorio = document.getElementById('consultorioPsicologo').value;
+                    
+                    if (this.dataset.modalidad === 'presencial' && consultorio) {
+                        consultorioInfo.classList.add('active');
+                        document.getElementById('consultorioDireccion').textContent = consultorio;
+                    } else {
+                        consultorioInfo.classList.remove('active');
+                    }
+                });
+            });
+
+            document.getElementById('formCita').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await agendarCita(userData);
+            });
+        });
+
+        let psicologoSeleccionado = null;
+        let horariosPsicologo = {};
+        let citasExistentes = [];
+
+        async function cargarPsicologos() {
+            const container = document.getElementById('psicologosContainer');
+            const loading = document.getElementById('loadingPsicologos');
+
+            try {
+                const usuariosRef = collection(db, "usuarios");
+                const q = query(usuariosRef, where("tipo_usuario", "==", "docente"));
+                const querySnapshot = await getDocs(q);
+                
+                const psicologos = [];
+                querySnapshot.forEach((doc) => {
+                    psicologos.push({ id: doc.id, ...doc.data() });
+                });
+
+                loading.classList.add('hidden');
+                container.classList.remove('hidden');
+
+                if (psicologos.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i class="fas fa-user-md" style="font-size: 3rem; display: block; margin-bottom: 15px;"></i>
+                            <p>No hay psicólogos disponibles en este momento.</p>
+                            <p style="font-size: 0.9rem;">Por favor, intenta más tarde.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Cargar horarios de todos los psicólogos
+                const horariosPromises = psicologos.map(async (psic) => {
+                    const horarioRef = doc(db, "horarios", psic.id);
+                    const horarioSnap = await getDoc(horarioRef);
+                    if (horarioSnap.exists()) {
+                        psic.horarios = horarioSnap.data();
+                    } else {
+                        psic.horarios = null;
+                    }
+                    return psic;
+                });
+
+                const psicologosConHorarios = await Promise.all(horariosPromises);
+
+                // Mostrar psicólogos
+                let html = '';
+                psicologosConHorarios.forEach(psic => {
+                    const iniciales = psic.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                    
+                    const tieneHorarios = psic.horarios && Object.values(psic.horarios).some(d => d.activo && d.horas && d.horas.length > 0);
+                    
+                    // 🔥 Determinar modalidades disponibles
+                    const consultorio = psic.consultorio || '';
+                    const tieneConsultorio = consultorio && consultorio.trim() !== '';
+                    
+                    // Mostrar tags de modalidades disponibles
+                    let modalidadTags = '';
+                    if (tieneConsultorio) {
+                        modalidadTags = `
+                            <div class="modalidad-disponible">
+                                <span class="modalidad-tag presencial"><i class="fas fa-building"></i> Presencial</span>
+                                <span class="modalidad-tag virtual"><i class="fas fa-video"></i> En línea</span>
+                            </div>
+                        `;
+                    } else {
+                        modalidadTags = `
+                            <div class="modalidad-disponible">
+                                <span class="modalidad-tag virtual"><i class="fas fa-video"></i> Solo en línea</span>
+                            </div>
+                        `;
+                    }
+
+                    // Resumen de horarios
+                    let horarioResumen = '';
+                    if (tieneHorarios) {
+                        const diasActivos = Object.entries(psic.horarios)
+                            .filter(([dia, data]) => data.activo && data.horas && data.horas.length > 0)
+                            .map(([dia, data]) => {
+                                const horasFormateadas = data.horas.join(', ');
+                                return `<div class="dia-info"><i class="fas fa-calendar-day"></i> ${dia}: <span class="horas">${horasFormateadas}</span></div>`;
+                            })
+                            .join('');
+                        horarioResumen = `
+                            <div class="horario-info">
+                                <span class="badge-disponible"><i class="fas fa-check-circle"></i> Horarios configurados</span>
+                                ${diasActivos}
+                            </div>
+                        `;
+                    } else {
+                        horarioResumen = `
+                            <div class="horario-info">
+                                <span class="badge-no-disponible"><i class="fas fa-exclamation-circle"></i> Sin horarios configurados</span>
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                        <div class="psicologo-card" 
+                             data-id="${psic.id}" 
+                             data-name="${psic.nombre}" 
+                             data-horarios='${JSON.stringify(psic.horarios || {})}'
+                             data-consultorio="${consultorio}"
+                             data-tiene-consultorio="${tieneConsultorio}">
+                            <div class="avatar">${iniciales}</div>
+                            <h3>${psic.nombre}</h3>
+                            <p>${psic.departamento || 'Departamento no especificado'}</p>
+                            <span class="badge"><i class="fas fa-user-md"></i> Psicólogo</span>
+                            ${modalidadTags}
+                            ${horarioResumen}
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+                // Evento para seleccionar psicólogo
+                document.querySelectorAll('.psicologo-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        document.querySelectorAll('.psicologo-card').forEach(c => c.classList.remove('selected'));
+                        this.classList.add('selected');
+
+                        const consultorio = this.dataset.consultorio || '';
+                        const tieneConsultorio = this.dataset.tieneConsultorio === 'true';
+                        
+                        psicologoSeleccionado = {
+                            id: this.dataset.id,
+                            nombre: this.dataset.name,
+                            consultorio: consultorio,
+                            tieneConsultorio: tieneConsultorio
+                        };
+
+                        try {
+                            horariosPsicologo = JSON.parse(this.dataset.horarios);
+                        } catch (e) {
+                            horariosPsicologo = {};
+                        }
+
+                        document.getElementById('formCita').classList.remove('hidden');
+                        document.getElementById('psicologoSeleccionado').value = psicologoSeleccionado.nombre;
+                        document.getElementById('psicologoId').value = psicologoSeleccionado.id;
+                        document.getElementById('consultorioPsicologo').value = consultorio;
+
+                        // 🔥 CONFIGURAR OPCIONES DE MODALIDAD
+                        const modalidadPresencial = document.getElementById('modalidadPresencial');
+                        const modalidadVirtual = document.getElementById('modalidadVirtual');
+                        
+                        // Resetear selección
+                        document.querySelectorAll('.modalidad-option').forEach(o => {
+                            o.classList.remove('selected', 'selected-presencial', 'selected-virtual', 'disabled');
+                        });
+                        document.getElementById('consultorioInfo').classList.remove('active');
+
+                        // 🔥 Si tiene consultorio → ambas opciones disponibles
+                        if (tieneConsultorio) {
+                            modalidadPresencial.classList.remove('disabled');
+                            modalidadPresencial.querySelector('.sub-label').textContent = consultorio;
+                            
+                            modalidadVirtual.classList.remove('disabled');
+                            modalidadVirtual.querySelector('.sub-label').textContent = 'Videollamada / Llamada';
+                        } else {
+                            // 🔥 Si NO tiene consultorio → solo en línea
+                            modalidadPresencial.classList.add('disabled');
+                            modalidadPresencial.querySelector('.sub-label').textContent = 'No disponible';
+                            
+                            modalidadVirtual.classList.remove('disabled');
+                            modalidadVirtual.querySelector('.sub-label').textContent = 'Videollamada / Llamada';
+                            
+                            // Seleccionar virtual automáticamente
+                            modalidadVirtual.click();
+                        }
+
+                        // Resetear selector de hora
+                        document.getElementById('horaCita').innerHTML = '<option value="">Selecciona una hora</option>';
+                        document.getElementById('horariosDisponiblesContainer').classList.add('hidden');
+                        
+                        // Si hay fecha seleccionada, cargar horarios
+                        const fecha = document.getElementById('fechaCita').value;
+                        if (fecha) {
+                            cargarHorariosDisponibles(psicologoSeleccionado.id, fecha);
+                        }
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error cargando psicólogos:', error);
+                loading.innerHTML = `
+                    <p style="color: #E53E3E;">Error al cargar psicólogos: ${error.message}</p>
+                    <button onclick="window.location.reload()" style="margin-top: 10px; padding: 8px 20px; background: var(--secondary-color); color: white; border: none; border-radius: var(--border-radius); cursor: pointer;">
+                        Reintentar
+                    </button>
+                `;
+            }
+        }
+
+        async function cargarHorariosDisponibles(psicologoId, fecha) {
+            const container = document.getElementById('horariosDisponiblesContainer');
+            const grid = document.getElementById('horasDisponiblesGrid');
+            const horaSelect = document.getElementById('horaCita');
+
+            const fechaObj = new Date(fecha + 'T00:00:00');
+            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const diaSemana = diasSemana[fechaObj.getDay()];
+
+            const horarioDia = horariosPsicologo[diaSemana];
+            const tieneHorarios = horarioDia && horarioDia.activo && horarioDia.horas && horarioDia.horas.length > 0;
+
+            if (!tieneHorarios) {
+                container.classList.add('hidden');
+                horaSelect.innerHTML = '<option value="">No hay horarios disponibles para esta fecha</option>';
+                return;
+            }
+
+            const citasRef = collection(db, "citas");
+            const q = query(
+                citasRef,
+                where("psicologo_id", "==", psicologoId),
+                where("fecha", "==", fecha),
+                where("estado", "in", ["pendiente", "confirmada"])
+            );
+            const querySnapshot = await getDocs(q);
+            
+            const citasOcupadas = [];
+            querySnapshot.forEach((doc) => {
+                citasOcupadas.push(doc.data().hora);
+            });
+
+            container.classList.remove('hidden');
+            
+            let horasHtml = '';
+            horarioDia.horas.forEach(hora => {
+                const isOcupada = citasOcupadas.includes(hora);
+                horasHtml += `
+                    <div class="hora-disponible ${isOcupada ? 'ocupada' : ''}" data-hora="${hora}">
+                        ${hora} ${isOcupada ? '🔴' : '✅'}
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = horasHtml || '<div class="sin-horarios">No hay horarios disponibles para esta fecha</div>';
+
+            horaSelect.innerHTML = '<option value="">Selecciona una hora</option>';
+            horarioDia.horas.forEach(hora => {
+                if (!citasOcupadas.includes(hora)) {
+                    horaSelect.innerHTML += `<option value="${hora}">${hora}</option>`;
+                }
+            });
+
+            document.querySelectorAll('.hora-disponible:not(.ocupada)').forEach(el => {
+                el.addEventListener('click', function() {
+                    document.querySelectorAll('.hora-disponible').forEach(h => h.classList.remove('seleccionada'));
+                    this.classList.add('seleccionada');
+                    const hora = this.dataset.hora;
+                    document.getElementById('horaCita').value = hora;
+                });
+            });
+        }
+
+        async function agendarCita(userData) {
+            const alertSuccess = document.getElementById('alertSuccess');
+            const alertError = document.getElementById('alertError');
+            const alertInfo = document.getElementById('alertInfo');
+
+            alertSuccess.classList.add('hidden');
+            alertError.classList.add('hidden');
+            alertInfo.classList.add('hidden');
+
+            if (!psicologoSeleccionado) {
+                alertError.textContent = 'Por favor, selecciona un psicólogo.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            // 🔥 Validar modalidad seleccionada
+            const modalidadSeleccionada = document.querySelector('.modalidad-option.selected');
+            if (!modalidadSeleccionada) {
+                alertError.textContent = 'Por favor, selecciona una modalidad de atención.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            const modalidad = modalidadSeleccionada.dataset.modalidad;
+
+            // 🔥 Si seleccionó presencial pero no tiene consultorio
+            if (modalidad === 'presencial' && !psicologoSeleccionado.tieneConsultorio) {
+                alertError.textContent = 'Este psicólogo no ofrece atención presencial.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            const fecha = document.getElementById('fechaCita').value;
+            const hora = document.getElementById('horaCita').value;
+            const motivo = document.getElementById('motivoCita').value;
+
+            if (!fecha) {
+                alertError.textContent = 'Por favor, selecciona una fecha.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            if (!hora) {
+                alertError.textContent = 'Por favor, selecciona una hora.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            // Verificar si la hora está dentro de los horarios del psicólogo
+            const fechaObj = new Date(fecha + 'T00:00:00');
+            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const diaSemana = diasSemana[fechaObj.getDay()];
+            const horarioDia = horariosPsicologo[diaSemana];
+
+            if (!horarioDia || !horarioDia.activo || !horarioDia.horas.includes(hora)) {
+                alertError.textContent = 'La hora seleccionada no está disponible en el horario del psicólogo.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            // Verificar duplicados
+            const citasRef = collection(db, "citas");
+            const q = query(
+                citasRef,
+                where("psicologo_id", "==", psicologoSeleccionado.id),
+                where("fecha", "==", fecha),
+                where("hora", "==", hora),
+                where("estado", "in", ["pendiente", "confirmada"])
+            );
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                alertError.textContent = 'Esta hora ya está ocupada. Por favor, elige otra.';
+                alertError.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // 🔥 Guardar la cita con la modalidad y consultorio
+                const citaData = {
+                    estudiante_id: userData.id,
+                    estudiante_nombre: userData.nombre,
+                    estudiante_correo: userData.correo,
+                    estudiante_telefono: userData.telefono || 'No especificado',
+                    estudiante_carrera: userData.carrera || 'No especificada',
+                    psicologo_id: psicologoSeleccionado.id,
+                    psicologo_nombre: psicologoSeleccionado.nombre,
+                    fecha: fecha,
+                    hora: hora,
+                    motivo: motivo,
+                    modalidad: modalidad, // "presencial" o "virtual"
+                    consultorio: modalidad === 'presencial' ? psicologoSeleccionado.consultorio : '',
+                    estado: 'pendiente',
+                    fecha_creacion: new Date().toISOString(),
+                    fecha_actualizacion: new Date().toISOString()
+                };
+
+                console.log('Guardando cita:', citaData);
+
+                await addDoc(collection(db, "citas"), citaData);
+
+                const modalidadTexto = modalidad === 'presencial' ? 'Presencial' : 'En línea';
+                let mensajeExito = `✅ ¡Cita agendada exitosamente con ${psicologoSeleccionado.nombre}!\n📅 ${fecha} a las ${hora}\n📋 Modalidad: ${modalidadTexto}`;
+                
+                if (modalidad === 'presencial') {
+                    mensajeExito += `\n📍 ${psicologoSeleccionado.consultorio}`;
+                }
+
+                alertSuccess.textContent = mensajeExito;
+                alertSuccess.classList.remove('hidden');
+
+                document.getElementById('fechaCita').value = '';
+                document.getElementById('horaCita').innerHTML = '<option value="">Selecciona una hora</option>';
+                document.getElementById('motivoCita').value = 'Estrés académico';
+                document.getElementById('horariosDisponiblesContainer').classList.add('hidden');
+                document.getElementById('consultorioInfo').classList.remove('active');
+                
+                document.querySelectorAll('.psicologo-card').forEach(c => c.classList.remove('selected'));
+                document.querySelectorAll('.modalidad-option').forEach(o => {
+                    o.classList.remove('selected', 'selected-presencial', 'selected-virtual');
+                });
+                
+                psicologoSeleccionado = null;
+                document.getElementById('psicologoSeleccionado').value = '';
+                document.getElementById('psicologoId').value = '';
+                document.getElementById('consultorioPsicologo').value = '';
+                document.getElementById('formCita').classList.add('hidden');
+
+            } catch (error) {
+                console.error('Error al agendar cita:', error);
+                alertError.textContent = 'Error al agendar la cita: ' + error.message;
+                alertError.classList.remove('hidden');
+            }
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+    
+            if (navToggle && navLinks) {
+                navToggle.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
