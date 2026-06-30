@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/styles-index.css">
+    <link rel="stylesheet" href="css/styles-chat.css">
+    <title>Chat - Innovasys</title>
+    <style>
+        .nav-toggle {
+            display: none;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            padding: 0;
+        }
+        .hamburger {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            position: relative;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .hamburger::before,
+        .hamburger::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            transition: transform 0.3s ease-in-out;
+        }
+        .hamburger::before {
+            top: -8px;
+        }
+        .hamburger::after {
+            bottom: -8px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background-color: #fff;
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .nav-links li {
+                padding: 1rem 0;
+                width: 100%;
+                text-align: center;
+            }
+            .nav-toggle {
+                display: block;
+            }
+            .top-nav {
+                position: relative;
+            }
+        }
+
+        .nav-toggle.active .hamburger {
+            background-color: transparent;
+        }
+        .nav-toggle.active .hamburger::before {
+            transform: translateY(8px) rotate(45deg);
+        }
+        .nav-toggle.active .hamburger::after {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        .user-item .cita-badge {
+            display: inline-block;
+            background: #10B981;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+        .user-item .cita-badge.pendiente {
+            background: #F59E0B;
+        }
+        .user-item .cita-badge.confirmada {
+            background: #10B981;
+        }
+        .user-item .cita-badge.completada {
+            background: #3B82F6;
+        }
+
+        .user-item .unread-badge {
+            background: #EF4444;
+            color: white;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0 6px;
+        }
+
+        .no-citas-message {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .no-citas-message i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 15px;
+            color: #CBD5E0;
+        }
+        .no-citas-message .sub-message {
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <a href="index.html"><img src="items/logomain.png" alt="Logo Plataforma Psicológica" class="nav-logo"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" id="backToPortalBtn">Volver al Portal</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+    </nav>
+    <div id="hex-animation-container"></div>
+
+    <div class="chat-container">
+        <div class="users-sidebar">
+            <div class="user-profile" id="userProfile">
+                <h3 id="userName">Cargando...</h3>
+                <p id="userRole">Usuario</p>
+                <div class="user-stats" id="userStats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">Contactos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="onlineUsers">0</div>
+                        <div class="stat-label">En línea</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="unreadMessages">0</div>
+                        <div class="stat-label">No leídos</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchUser" placeholder="Buscar contacto...">
+            </div>
+            
+            <div class="users-header">
+                <span>Mis contactos</span>
+                <span id="usersCount">0</span>
+            </div>
+            
+            <div class="users-list" id="usersList">
+                <div class="loading-users">
+                    <div class="spinner"></div>
+                    <p>Cargando contactos...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-main">
+            <div class="chat-header" id="chatHeader" style="display: none;">
+                <div class="chat-header-info">
+                    <button id="backMobileBtn"><i class="fas fa-arrow-left"></i></button>
+                    <h2 id="chatWith">Selecciona un contacto</h2>
+                    <p id="chatStatus">para comenzar a chatear</p>
+                </div>
+                <div class="chat-actions" id="chatActions">
+                    <button class="action-btn video-call-btn" id="videoCallBtn">📹 Videollamada</button>
+                    <button class="action-btn audio-call-btn" id="audioCallBtn">📞 Llamada</button>
+                </div>
+            </div>
+            
+            <div class="messages-area" id="messagesArea">
+                <div class="no-chat-selected">
+                    <h3>👋 ¡Bienvenido al Chat UTC!</h3>
+                    <p>Selecciona un contacto de la lista para comenzar a conversar.</p>
+                    <p style="font-size: 48px; margin: 20px;">💬</p>
+                </div>
+            </div>
+            
+            <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                <div class="recording-indicator" id="recordingIndicator">
+                    <span class="recording-time" id="recordingTime">0:00</span>
+                    <span>Grabando mensaje de voz...</span>
+                    <div class="recording-controls">
+                        <button class="recording-send" id="sendRecordingBtn">Enviar</button>
+                        <button class="recording-cancel" id="cancelRecordingBtn">Cancelar</button>
+                    </div>
+                </div>
+                
+                <div class="input-container" id="normalInput">
+                    <button class="attach-btn" id="attachBtn" title="Adjuntar archivo"><i class="fas fa-paperclip"></i></button>
+                    <input type="text" class="message-input" id="messageInput" placeholder="Escribe un mensaje...">
+                    <button class="voice-record-btn" id="recordBtn" title="Grabar mensaje de voz"><i class="fas fa-microphone"></i></button>
+                    <button class="send-btn" id="sendBtn" title="Enviar mensaje"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="videoCallContainer">
+        <div class="video-wrapper">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <video id="localVideo" autoplay playsinline muted></video>
+            <div class="call-controls">
+                <button id="muteAudioBtn" title="Silenciar/Activar audio"><i class="fas fa-microphone-slash"></i></button>
+                <button id="muteVideoBtn" title="Ocultar/Mostrar video"><i class="fas fa-video-slash"></i></button>
+                <button id="endCallBtn" title="Terminar llamada"><i class="fas fa-phone-slash"></i></button>
+            </div>
+            <button id="closeCallBtn">&times;</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // ===== FIX PARA CELULAR Y SCROLL =====
+        function scrollToBottom(){
+            const messagesArea = document.getElementById("messagesArea");
+            if(messagesArea){
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }
+        }
+
+        window.addEventListener("resize", () => {
+            scrollToBottom();
+        });
+        
+        import { db } from './js/conexion.js';
+        import { 
+            collection, 
+            query, 
+            where, 
+            getDocs, 
+            addDoc, 
+            onSnapshot, 
+            orderBy, 
+            updateDoc, 
+            doc,
+            setDoc,
+            getDoc,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Variables del chat
+        let currentUser = null;
+        let selectedUserId = null;
+        let selectedUserName = '';
+        let allUsers = [];
+        let usuariosConCita = {};
+        let unsubscribeMessages = null;
+        let unsubscribeAllMessages = null;
+        let mensajesNoLeidos = {};
+        let contactosIds = new Set();
+        let recargandoContactos = false;
+        
+        // Variables para grabación
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingStartTime = null;
+        let recordingTimer = null;
+        
+        // Variables para WebRTC
+        let localStream = null;
+        let peerConnection = null;
+        let currentCallRoomId = null;
+        let unsubscribeCall = null;
+        let unsubscribeIceCandidates = null;
+        
+        const iceServers = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
+            ]
+        };
+        
+        // ===== FUNCIONES DE OBTENCIÓN DE CONTACTOS =====
+        async function obtenerContactosPorCitas(userId) {
+            console.log('🔍 [PSICÓLOGO] Buscando citas para:', userId);
+            
+            const citasRef = collection(db, "citas");
+            const q = query(
+                citasRef,
+                where("psicologo_id", "==", userId),
+                where("estado", "in", ["pendiente", "confirmada", "completada"])
+            );
+            
+            const querySnapshot = await getDocs(q);
+            console.log('📋 [PSICÓLOGO] Total de citas encontradas:', querySnapshot.size);
+            
+            const ids = new Set();
+            const info = {};
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                console.log('📄 [PSICÓLOGO] Cita encontrada:', data);
+                const estudianteId = data.estudiante_id;
+                if (estudianteId) {
+                    ids.add(estudianteId);
+                    info[estudianteId] = {
+                        nombre: data.estudiante_nombre,
+                        estado: data.estado,
+                        fecha: data.fecha,
+                        hora: data.hora,
+                        modalidad: data.modalidad || 'No especificada'
+                    };
+                }
+            });
+            
+            console.log('📋 [PSICÓLOGO] IDs de estudiantes con cita:', Array.from(ids));
+            return { ids, info };
+        }
+
+        async function obtenerContactosPorMensajesRecibidos(userId) {
+            console.log('🔍 [USUARIO] Buscando mensajes recibidos para:', userId);
+            
+            const mensajesRef = collection(db, "mensajes");
+            const q = query(
+                mensajesRef,
+                where("id_destinatario", "==", userId)
+            );
+            
+            const querySnapshot = await getDocs(q);
+            console.log('📋 [USUARIO] Total de mensajes recibidos:', querySnapshot.size);
+            
+            const ids = new Set();
+            const info = {};
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                console.log('📄 [USUARIO] Mensaje recibido:', data);
+                const remitenteId = data.id_remitente;
+                if (remitenteId) {
+                    ids.add(remitenteId);
+                    if (!info[remitenteId]) {
+                        info[remitenteId] = {
+                            ultimoMensaje: data.mensaje,
+                            fecha: data.fecha_envio
+                        };
+                    }
+                }
+            });
+            
+            console.log('📋 [USUARIO] IDs de psicólogos que han respondido:', Array.from(ids));
+            return { ids, info };
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(sessionStorage.getItem('usuario_actual'));
+            
+            if (!userData) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // 🔥 CORRECCIÓN: Asegurar que tipo_usuario esté definido
+            if (!userData.tipo_usuario) {
+                userData.tipo_usuario = userData.tipo || 'alumno';
+                sessionStorage.setItem('usuario_actual', JSON.stringify(userData));
+                console.log('✅ Tipo de usuario asignado por defecto:', userData.tipo_usuario);
+            }
+            
+            currentUser = userData;
+            console.log('👤 USUARIO ACTUAL:', currentUser.id, currentUser.nombre, currentUser.tipo_usuario);
+            
+            // 🔥 TEXTO EN PANTALLA: "Docente" → "Psicólogo", "Estudiante" → "Usuario"
+            const userTipo = currentUser.tipo_usuario || currentUser.tipo || 'alumno';
+            const rol = userTipo === 'docente' ? 'Psicólogo' : 'Usuario';
+            
+            document.getElementById('userName').textContent = currentUser.nombre;
+            document.getElementById('userRole').textContent = rol;
+            
+            loadContactos();
+            escucharCambiosEnTiempoReal();
+            listenForIncomingCalls();
+
+            const backBtn = document.getElementById("backMobileBtn");
+            if(backBtn){
+                backBtn.addEventListener("click", function(){
+                    document.querySelector(".chat-main").classList.remove("active");
+                });
+            }
+
+            document.getElementById('backToPortalBtn').addEventListener('click', function() {
+                const tipo = currentUser.tipo_usuario || currentUser.tipo || 'alumno';
+                if (tipo === 'estudiante' || tipo === 'alumno') {
+                    window.location.href = 'student.html';
+                } else {
+                    window.location.href = 'admin.html';
+                }
+            });
+
+            document.getElementById('searchUser').addEventListener('input', filterUsers);
+            document.getElementById('videoCallBtn').addEventListener('click', startVideoCall);
+            document.getElementById('audioCallBtn').addEventListener('click', startAudioCall);
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            document.getElementById('recordBtn').addEventListener('click', startRecording);
+            document.getElementById('sendRecordingBtn').addEventListener('click', stopAndSendRecording);
+            document.getElementById('cancelRecordingBtn').addEventListener('click', cancelRecording);
+            document.getElementById('attachBtn').addEventListener('click', attachFile);
+
+            document.getElementById('muteAudioBtn').addEventListener('click', toggleAudio);
+            document.getElementById('muteVideoBtn').addEventListener('click', toggleVideo);
+            document.getElementById('endCallBtn').addEventListener('click', endCall);
+            document.getElementById('closeCallBtn').addEventListener('click', endCall);
+        });
+
+        // ===== ESCUCHAR CAMBIOS EN TIEMPO REAL =====
+        function escucharCambiosEnTiempoReal() {
+            const esDocente = currentUser.tipo_usuario === 'docente';
+            console.log('🔄 INICIANDO ESCUCHA EN TIEMPO REAL - Rol:', esDocente ? 'PSICÓLOGO' : 'USUARIO');
+            
+            if (esDocente) {
+                // 🔥 PSICÓLOGO: Escuchar NUEVAS CITAS
+                const citasRef = collection(db, "citas");
+                const q = query(
+                    citasRef,
+                    where("psicologo_id", "==", currentUser.id),
+                    where("estado", "in", ["pendiente", "confirmada", "completada"])
+                );
+                
+                console.log('🔊 [PSICÓLOGO] Escuchando citas en tiempo real...');
+                
+                let citasAnteriores = new Set(contactosIds);
+                
+                onSnapshot(q, async (snapshot) => {
+                    console.log('🔔 [PSICÓLOGO] Cambio detectado en citas. Total:', snapshot.size);
+                    
+                    const idsActuales = new Set();
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const estudianteId = data.estudiante_id;
+                        if (estudianteId) {
+                            idsActuales.add(estudianteId);
+                            console.log('📌 [PSICÓLOGO] Usuario en cita:', estudianteId, data.estudiante_nombre);
+                        }
+                    });
+                    
+                    // Verificar si hay nuevos IDs
+                    let hayNuevos = false;
+                    idsActuales.forEach(id => {
+                        if (!citasAnteriores.has(id)) {
+                            hayNuevos = true;
+                            console.log('🆕 [PSICÓLOGO] NUEVO USUARIO DETECTADO:', id);
+                        }
+                    });
+                    
+                    citasAnteriores = idsActuales;
+                    
+                    if (hayNuevos && !recargandoContactos) {
+                        recargandoContactos = true;
+                        console.log('🔄 [PSICÓLOGO] Recargando contactos...');
+                        await loadContactos();
+                        recargandoContactos = false;
+                    } else {
+                        console.log('✅ [PSICÓLOGO] No hay nuevos usuarios');
+                    }
+                }, (error) => {
+                    console.error('❌ [PSICÓLOGO] Error escuchando citas:', error);
+                });
+            } else {
+                // 🔥 USUARIO: Escuchar nuevos mensajes recibidos
+                const mensajesRef = collection(db, "mensajes");
+                const q = query(
+                    mensajesRef,
+                    where("id_destinatario", "==", currentUser.id)
+                );
+                
+                console.log('🔊 [USUARIO] Escuchando mensajes en tiempo real...');
+                
+                onSnapshot(q, async (snapshot) => {
+                    console.log('🔔 [USUARIO] Cambio detectado en mensajes. Total:', snapshot.size);
+                    
+                    mensajesNoLeidos = {};
+                    let totalNoLeidos = 0;
+                    let nuevosRemitentes = [];
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        console.log('📌 [USUARIO] Mensaje recibido:', data);
+                        
+                        if (!data.leido) {
+                            const remitenteId = data.id_remitente;
+                            if (!mensajesNoLeidos[remitenteId]) {
+                                mensajesNoLeidos[remitenteId] = 0;
+                            }
+                            mensajesNoLeidos[remitenteId]++;
+                            totalNoLeidos++;
+                            
+                            const yaExiste = contactosIds.has(remitenteId);
+                            if (!yaExiste && remitenteId !== currentUser.id) {
+                                nuevosRemitentes.push(remitenteId);
+                                console.log('🆕 [USUARIO] NUEVO PSICÓLOGO DETECTADO:', remitenteId);
+                            }
+                        }
+                    });
+                    
+                    if (nuevosRemitentes.length > 0 && !recargandoContactos) {
+                        recargandoContactos = true;
+                        console.log('🔄 [USUARIO] Recargando contactos...');
+                        await loadContactos();
+                        recargandoContactos = false;
+                    } else {
+                        actualizarBadgesNoLeidos();
+                    }
+                    
+                    document.getElementById('unreadMessages').textContent = totalNoLeidos;
+                    
+                    if (selectedUserId) {
+                        loadMessages();
+                    }
+                }, (error) => {
+                    console.error('❌ [USUARIO] Error escuchando mensajes:', error);
+                });
+            }
+        }
+
+        function actualizarBadgesNoLeidos() {
+            document.querySelectorAll('.user-item').forEach(item => {
+                const userId = item.dataset.id;
+                const badgeContainer = item.querySelector('.unread-badge-container');
+                const count = mensajesNoLeidos[userId] || 0;
+                
+                if (badgeContainer) {
+                    if (count > 0) {
+                        badgeContainer.innerHTML = `<span class="unread-badge">${count}</span>`;
+                    } else {
+                        badgeContainer.innerHTML = '';
+                    }
+                }
+            });
+        }
+
+        // ==================== FUNCIONES DEL CHAT ====================
+        
+        async function loadContactos() {
+            console.log('🔍 === INICIANDO CARGA DE CONTACTOS ===');
+            
+            try {
+                const esDocente = currentUser.tipo_usuario === 'docente';
+                let contactosIdsTemp = new Set();
+                let citasInfo = {};
+                
+                if (esDocente) {
+                    const resultado = await obtenerContactosPorCitas(currentUser.id);
+                    contactosIdsTemp = resultado.ids;
+                    citasInfo = resultado.info;
+                } else {
+                    const resultado = await obtenerContactosPorMensajesRecibidos(currentUser.id);
+                    contactosIdsTemp = resultado.ids;
+                }
+                
+                console.log('📋 CONTACTOS ENCONTRADOS:', Array.from(contactosIdsTemp));
+                contactosIds = contactosIdsTemp;
+                
+                if (contactosIds.size === 0) {
+                    console.log('⚠️ No hay contactos');
+                    mostrarSinContactos(esDocente);
+                    return;
+                }
+                
+                // Obtener datos completos de los usuarios
+                const usuariosRef = collection(db, "usuarios");
+                const querySnapshot = await getDocs(usuariosRef);
+                
+                allUsers = [];
+                usuariosConCita = {};
+                
+                querySnapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    const userId = doc.id;
+                    
+                    if (contactosIds.has(userId)) {
+                        const userInfo = { id: userId, ...userData };
+                        
+                        if (esDocente && citasInfo[userId]) {
+                            userInfo.cita_estado = citasInfo[userId].estado;
+                            userInfo.cita_fecha = citasInfo[userId].fecha;
+                            userInfo.cita_hora = citasInfo[userId].hora;
+                            userInfo.cita_modalidad = citasInfo[userId].modalidad;
+                            usuariosConCita[userId] = citasInfo[userId];
+                        }
+                        
+                        allUsers.push(userInfo);
+                        console.log('✅ Usuario agregado:', userData.nombre);
+                    }
+                });
+                
+                console.log('📋 TOTAL DE USUARIOS CARGADOS:', allUsers.length);
+                document.getElementById('totalUsers').textContent = allUsers.length;
+                
+                if (allUsers.length === 0) {
+                    mostrarSinContactos(esDocente);
+                } else {
+                    displayUsers(allUsers, esDocente);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error cargando contactos:', error);
+                document.getElementById('usersList').innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #f44336;">
+                        Error al cargar contactos: ${error.message}
+                        <button onclick="window.location.reload()" style="margin-top: 10px; padding: 5px 15px;">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function mostrarSinContactos(esDocente) {
+            const usersList = document.getElementById('usersList');
+            
+            let mensaje = '';
+            let subMensaje = '';
+            
+            if (esDocente) {
+                mensaje = 'No tienes usuarios con citas agendadas.';
+                subMensaje = 'Cuando un usuario agende una cita contigo, aparecerá aquí automáticamente.';
+            } else {
+                mensaje = 'No tienes conversaciones activas con psicólogos.';
+                subMensaje = 'Cuando un psicólogo te responda un mensaje, aparecerá aquí.';
+            }
+            
+            usersList.innerHTML = `
+                <div class="no-citas-message">
+                    <i class="fas fa-comment-slash"></i>
+                    <p>${mensaje}</p>
+                    <p class="sub-message">${subMensaje}</p>
+                </div>
+            `;
+            document.getElementById('usersCount').textContent = '0';
+        }
+        
+        function displayUsers(users, esDocente) {
+            const usersList = document.getElementById('usersList');
+            document.getElementById('usersCount').textContent = users.length;
+            
+            if (users.length === 0) {
+                mostrarSinContactos(esDocente);
+                return;
+            }
+            
+            let html = '';
+            
+            users.sort((a, b) => {
+                const aUnread = mensajesNoLeidos[a.id] || 0;
+                const bUnread = mensajesNoLeidos[b.id] || 0;
+                return bUnread - aUnread;
+            });
+            
+            users.forEach(user => {
+                const isSelected = selectedUserId === user.id ? 'active' : '';
+                const iniciales = user.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                const userTipo = user.tipo_usuario || user.tipo || '';
+                // 🔥 TEXTO EN PANTALLA: "Docente" → "Psicólogo", "Estudiante" → "Usuario"
+                const roleName = userTipo === 'docente' ? 'Psicólogo' : 'Usuario';
+                
+                let estadoBadge = '';
+                let detalleCita = '';
+                if (esDocente && user.cita_estado) {
+                    const estadoLabels = {
+                        'pendiente': '⏳ Pendiente',
+                        'confirmada': '✅ Confirmada',
+                        'completada': '📋 Completada'
+                    };
+                    estadoBadge = `<span class="cita-badge ${user.cita_estado}">${estadoLabels[user.cita_estado] || user.cita_estado}</span>`;
+                    detalleCita = user.cita_fecha ? 
+                        `📅 ${user.cita_fecha} ${user.cita_hora ? '🕐 ' + user.cita_hora : ''}` : '';
+                }
+                
+                const unreadCount = mensajesNoLeidos[user.id] || 0;
+                const unreadBadge = unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : '';
+                
+                html += `
+                    <div class="user-item ${isSelected}" 
+                         data-id="${user.id}" 
+                         data-name="${user.nombre}">
+                        <div class="user-avatar">
+                            ${iniciales || '👤'}
+                            <span class="user-status status-offline"></span>
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">
+                                ${user.nombre}
+                                ${estadoBadge}
+                                <span class="unread-badge-container">${unreadBadge}</span>
+                            </div>
+                            <div class="user-detail">
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">${roleName}</span>
+                                ${detalleCita ? `<span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 8px;">${detalleCita}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            usersList.innerHTML = html;
+            
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    selectUser(this.dataset.id, this.dataset.name);
+                });
+            });
+            
+            actualizarBadgesNoLeidos();
+        }
+        
+        function filterUsers() {
+            const searchTerm = document.getElementById('searchUser').value.toLowerCase();
+            if (!searchTerm) {
+                displayUsers(allUsers, currentUser.tipo_usuario === 'docente');
+                return;
+            }
+            const filtered = allUsers.filter(user => user.nombre.toLowerCase().includes(searchTerm));
+            displayUsers(filtered, currentUser.tipo_usuario === 'docente');
+        }
+        
+        function selectUser(userId, userName) {
+            selectedUserId = userId;
+            selectedUserName = userName;
+
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('chatInputArea').style.display = 'flex';
+
+            document.getElementById('chatWith').textContent = userName;
+            
+            const esDocente = currentUser.tipo_usuario === 'docente';
+            let statusText = '';
+            if (esDocente && usuariosConCita[userId]) {
+                const cita = usuariosConCita[userId];
+                const estadoLabels = {
+                    'pendiente': '⏳ Pendiente',
+                    'confirmada': '✅ Confirmada',
+                    'completada': '📋 Completada'
+                };
+                statusText = `${estadoLabels[cita.estado] || cita.estado} 📅 ${cita.fecha}`;
+            } else {
+                statusText = 'Conversación activa';
+            }
+            
+            document.getElementById('chatStatus').textContent = statusText;
+
+            const noChatWelcome = document.querySelector('.no-chat-selected');
+            if (noChatWelcome) {
+                noChatWelcome.style.display = 'none';
+            }
+
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.id === userId) {
+                    item.classList.add('active');
+                }
+            });
+
+            document.querySelector(".chat-main").classList.add("active");
+
+            marcarMensajesComoLeidos(userId);
+            loadMessages();
+        }
+
+        async function marcarMensajesComoLeidos(remitenteId) {
+            try {
+                const mensajesRef = collection(db, "mensajes");
+                const q = query(
+                    mensajesRef,
+                    where("id_remitente", "==", remitenteId),
+                    where("id_destinatario", "==", currentUser.id),
+                    where("leido", "==", false)
+                );
+                
+                const querySnapshot = await getDocs(q);
+                const batch = [];
+                
+                querySnapshot.forEach((doc) => {
+                    batch.push(updateDoc(doc.ref, { leido: true }));
+                });
+                
+                await Promise.all(batch);
+                
+                mensajesNoLeidos[remitenteId] = 0;
+                actualizarBadgesNoLeidos();
+                
+                let total = 0;
+                Object.values(mensajesNoLeidos).forEach(count => total += count);
+                document.getElementById('unreadMessages').textContent = total;
+                
+            } catch (error) {
+                console.error('Error marcando mensajes como leídos:', error);
+            }
+        }
+        
+        function loadMessages() {
+            if (!selectedUserId) return;
+
+            if (unsubscribeMessages) {
+                unsubscribeMessages();
+            }
+
+            const mensajesRef = collection(db, "mensajes");
+            const q = query(mensajesRef, orderBy("fecha_envio", "asc"));
+
+            unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
+                const messages = [];
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const esConversacion =
+                        (data.id_remitente === currentUser.id && data.id_destinatario === selectedUserId) ||
+                        (data.id_remitente === selectedUserId && data.id_destinatario === currentUser.id);
+
+                    if (esConversacion) {
+                        messages.push({ id: doc.id, ...data });
+                    }
+                });
+
+                displayMessages(messages);
+            });
+        }
+        
+        function displayMessages(messages) {
+            const messagesArea = document.getElementById('messagesArea');
+            
+            if (!messages || messages.length === 0) {
+                messagesArea.innerHTML = `
+                    <div style="text-align: center; color: #999; margin-top: 50px;">
+                        <p>No hay mensajes con ${selectedUserName}</p>
+                        <p>¡Envía el primer mensaje!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            let lastDate = '';
+            
+            messages.forEach(msg => {
+                const msgDate = new Date(msg.fecha_envio).toLocaleDateString();
+                
+                if (msgDate !== lastDate) {
+                    html += `<div class="date-separator"><span>${msgDate}</span></div>`;
+                    lastDate = msgDate;
+                }
+                
+                const messageClass = msg.id_remitente === currentUser.id ? 'sent' : 'received';
+                html += `
+                    <div class="message ${messageClass}">
+                        <div class="message-content">${msg.mensaje}</div>
+                        <div class="message-time">${new Date(msg.fecha_envio).toLocaleTimeString()}</div>
+                    </div>
+                `;
+            });
+            
+            messagesArea.innerHTML = html;
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !selectedUserId) {
+                alert('Selecciona un usuario y escribe un mensaje');
+                return;
+            }
+            
+            try {
+                await addDoc(collection(db, "mensajes"), {
+                    id_remitente: currentUser.id,
+                    id_destinatario: selectedUserId,
+                    mensaje: message,
+                    tipo_mensaje: 'texto',
+                    fecha_envio: new Date().toISOString(),
+                    leido: false
+                });
+                input.value = '';
+            } catch (error) {
+                console.error('Error enviando mensaje:', error);
+                alert('Error al enviar: ' + error.message);
+            }
+        }
+        
+        // ==================== FUNCIONES DE GRABACIÓN ====================
+        
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
+                mediaRecorder.onstop = () => { stream.getTracks().forEach(track => track.stop()); };
+                mediaRecorder.start();
+                
+                document.getElementById('normalInput').style.display = 'none';
+                document.getElementById('recordingIndicator').classList.add('active');
+                document.getElementById('recordBtn').classList.add('recording');
+                
+                recordingStartTime = Date.now();
+                updateRecordingTime();
+                recordingTimer = setInterval(updateRecordingTime, 1000);
+            } catch (error) {
+                console.error('Error accediendo al micrófono:', error);
+                alert('No se pudo acceder al micrófono. Verifica los permisos.');
+            }
+        }
+        
+        function updateRecordingTime() {
+            if (!recordingStartTime) return;
+            const seconds = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            document.getElementById('recordingTime').textContent = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        async function stopAndSendRecording() {
+            if (!mediaRecorder || !selectedUserId) return;
+            clearInterval(recordingTimer);
+            mediaRecorder.addEventListener('stop', async () => {
+                alert('Funcionalidad de audio en desarrollo');
+                document.getElementById('normalInput').style.display = 'flex';
+                document.getElementById('recordingIndicator').classList.remove('active');
+                document.getElementById('recordBtn').classList.remove('recording');
+                recordingStartTime = null;
+            });
+            mediaRecorder.stop();
+        }
+        
+        function cancelRecording() {
+            clearInterval(recordingTimer);
+            mediaRecorder.stop();
+            document.getElementById('normalInput').style.display = 'flex';
+            document.getElementById('recordingIndicator').classList.remove('active');
+            document.getElementById('recordBtn').classList.remove('recording');
+            recordingStartTime = null;
+        }
+        
+        function attachFile() {
+            alert('Funcionalidad de archivos en desarrollo');
+        }
+        
+        // ==================== FUNCIONES DE WEBRTC ====================
+        
+        async function startVideoCall() {
+            if (!selectedUserId) { alert('Selecciona un usuario para llamar'); return; }
+            await startCall('video');
+        }
+        
+        async function startAudioCall() {
+            if (!selectedUserId) { alert('Selecciona un usuario para llamar'); return; }
+            await startCall('audio');
+        }
+        
+        async function startCall(callType) {
+            try {
+                console.log("Iniciando llamada de tipo:", callType);
+                const constraints = { audio: true, video: callType === 'video' };
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = localStream;
+                
+                const roomId = `${currentUser.id}_${selectedUserId}_${Date.now()}`;
+                currentCallRoomId = roomId;
+                
+                await addDoc(collection(db, "calls"), {
+                    callerId: currentUser.id,
+                    callerName: currentUser.nombre,
+                    calleeId: selectedUserId,
+                    callType: callType,
+                    status: 'ringing',
+                    createdAt: new Date().toISOString(),
+                    roomId: roomId
+                });
+                
+                const roomRef = doc(db, "rooms", roomId);
+                await setDoc(roomRef, {
+                    callerId: currentUser.id,
+                    calleeId: selectedUserId,
+                    status: 'waiting',
+                    createdAt: new Date().toISOString()
+                });
+                
+                await createPeerConnection(roomRef, true);
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                await updateDoc(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
+                
+                document.getElementById('videoCallContainer').style.display = 'block';
+                
+                unsubscribeCall = onSnapshot(roomRef, async (snapshot) => {
+                    const data = snapshot.data();
+                    if (data.answer && !peerConnection.currentRemoteDescription) {
+                        const answer = new RTCSessionDescription(data.answer);
+                        await peerConnection.setRemoteDescription(answer);
+                    }
+                    if (data.status === 'ended') { endCall(); }
+                });
+                
+                showNotification('Llamada iniciada, esperando respuesta...');
+            } catch (error) {
+                console.error("Error al iniciar llamada:", error);
+                alert("Error al iniciar llamada: " + error.message);
+            }
+        }
+        
+        async function createPeerConnection(roomRef, isCaller) {
+            peerConnection = new RTCPeerConnection(iceServers);
+            localStream.getTracks().forEach(track => { peerConnection.addTrack(track, localStream); });
+            peerConnection.ontrack = (event) => {
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.srcObject = event.streams[0];
+            };
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    const candidateRef = collection(roomRef, isCaller ? "callerCandidates" : "calleeCandidates");
+                    addDoc(candidateRef, event.candidate.toJSON());
+                }
+            };
+            const remoteCandidatesRef = collection(roomRef, isCaller ? "calleeCandidates" : "callerCandidates");
+            unsubscribeIceCandidates = onSnapshot(remoteCandidatesRef, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const candidate = new RTCIceCandidate(change.doc.data());
+                        peerConnection.addIceCandidate(candidate);
+                    }
+                });
+            });
+            peerConnection.onconnectionstatechange = () => {
+                if (peerConnection.connectionState === 'disconnected' || 
+                    peerConnection.connectionState === 'failed' ||
+                    peerConnection.connectionState === 'closed') {
+                    endCall();
+                }
+            };
+        }
+        
+        function listenForIncomingCalls() {
+            const callsRef = collection(db, "calls");
+            const q = query(callsRef, where("calleeId", "==", currentUser.id), where("status", "==", "ringing"));
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const call = change.doc.data();
+                        showIncomingCallDialog(call, change.doc.id);
+                    }
+                });
+            });
+        }
+        
+        function showIncomingCallDialog(call, callId) {
+            const callType = call.callType === 'video' ? '📹 videollamada' : '📞 llamada de audio';
+            const dialog = document.createElement('div');
+            dialog.className = 'incoming-call-dialog';
+            dialog.innerHTML = `
+                <h3>🔔 Llamada entrante</h3>
+                <p><strong>${call.callerName}</strong> quiere una ${callType}</p>
+                <button class="accept">Aceptar</button>
+                <button class="reject">Rechazar</button>
+            `;
+            document.body.appendChild(dialog);
+            
+            dialog.querySelector('.accept').onclick = async () => {
+                dialog.remove();
+                await acceptCall(call, callId);
+            };
+            dialog.querySelector('.reject').onclick = async () => {
+                dialog.remove();
+                await rejectCall(callId);
+            };
+            
+            setTimeout(() => {
+                if (document.body.contains(dialog)) {
+                    dialog.remove();
+                    rejectCall(callId);
+                }
+            }, 30000);
+        }
+        
+        async function acceptCall(call, callId) {
+            try {
+                const constraints = { audio: true, video: call.callType === 'video' };
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = localStream;
+                const roomRef = doc(db, "rooms", call.roomId);
+                currentCallRoomId = call.roomId;
+                
+                await updateDoc(doc(db, "calls", callId), {
+                    status: 'accepted',
+                    acceptedAt: new Date().toISOString()
+                });
+                
+                const roomSnapshot = await getDoc(roomRef);
+                const roomData = roomSnapshot.data();
+                await createPeerConnection(roomRef, false);
+                const offer = new RTCSessionDescription(roomData.offer);
+                await peerConnection.setRemoteDescription(offer);
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                await updateDoc(roomRef, {
+                    answer: { type: answer.type, sdp: answer.sdp },
+                    status: 'active'
+                });
+                document.getElementById('videoCallContainer').style.display = 'block';
+            } catch (error) {
+                console.error("Error al aceptar llamada:", error);
+            }
+        }
+        
+        async function rejectCall(callId) {
+            try {
+                await updateDoc(doc(db, "calls", callId), {
+                    status: 'rejected',
+                    rejectedAt: new Date().toISOString()
+                });
+                showNotification('Llamada rechazada');
+            } catch (error) {
+                console.error("Error al rechazar llamada:", error);
+            }
+        }
+        
+        async function endCall() {
+            try {
+                if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+                if (peerConnection) { peerConnection.close(); peerConnection = null; }
+                if (unsubscribeCall) { unsubscribeCall(); unsubscribeCall = null; }
+                if (unsubscribeIceCandidates) { unsubscribeIceCandidates(); unsubscribeIceCandidates = null; }
+                if (currentCallRoomId) {
+                    await updateDoc(doc(db, "rooms", currentCallRoomId), {
+                        status: 'ended',
+                        endedAt: new Date().toISOString()
+                    });
+                }
+                document.getElementById('videoCallContainer').style.display = 'none';
+                document.getElementById('localVideo').srcObject = null;
+                document.getElementById('remoteVideo').srcObject = null;
+                currentCallRoomId = null;
+            } catch (error) {
+                console.error("Error al terminar llamada:", error);
+            }
+        }
+        
+        function toggleAudio() {
+            if (localStream) {
+                const audioTracks = localStream.getAudioTracks();
+                const enabled = !audioTracks[0]?.enabled;
+                audioTracks.forEach(track => track.enabled = enabled);
+                document.getElementById('muteAudioBtn').textContent = enabled ? '🔇' : '🔊';
+            }
+        }
+        
+        function toggleVideo() {
+            if (localStream) {
+                const videoTracks = localStream.getVideoTracks();
+                const enabled = !videoTracks[0]?.enabled;
+                videoTracks.forEach(track => track.enabled = enabled);
+                document.getElementById('muteVideoBtn').textContent = enabled ? '🎥' : '🚫';
+            }
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'call-notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        window.addEventListener('beforeunload', function() {
+            if (unsubscribeMessages) unsubscribeMessages();
+            if (recordingTimer) clearInterval(recordingTimer);
+            if (unsubscribeCall) unsubscribeCall();
+            if (unsubscribeIceCandidates) unsubscribeIceCandidates();
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            if (navToggle && navLinks) {
+                navToggle.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
