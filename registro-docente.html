@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/styles-index.css">
+    <link rel="stylesheet" href="css/registro-docente.css">
+
+    <title>Registro de Psicólogo - Innovasys</title>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <a href="index.html"><img src="items/logomain.png" alt="Logo Innovasys" class="nav-logo"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="info.html#servicios">Servicios</a></li>
+            <li><a href="info.html#quienes-somos">Quiénes Somos</a></li>
+            <li><a href="info.html#blogs">Blogs</a></li>
+            <li><a href="info.html#ayuda">Ayuda</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+    </nav>
+    <div id="hex-animation-container"></div>
+
+    <div class="form-container">
+        <h1><i class="fas fa-user-md"></i> Registrar Psicólogo</h1>
+        <p class="subtitle">Crea una cuenta para un psicólogo o docente</p>
+
+        <div id="alertSuccess" class="alert alert-success hidden"></div>
+        <div id="alertError" class="alert alert-error hidden"></div>
+
+        <form id="registerForm" novalidate>
+            <div class="form-group">
+                <label for="nombre">Nombre Completo <span class="required">*</span></label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Ej: Dr. Juan Pérez García">
+            </div>
+
+            <div class="form-group">
+                <label for="correo">Correo <span class="required">*</span></label>
+                <input type="email" id="correo" name="correo" required placeholder="juan.perez@doc.com">
+            </div>
+
+            <div class="form-group">
+                <label for="telefono">Teléfono <span class="required">*</span></label>
+                <input type="tel" id="telefono" name="telefono" required placeholder="55 1234 5678">
+            </div>
+
+            <div class="form-group">
+                <label for="departamento">Área <span class="required">*</span></label>
+                <select id="departamento" name="departamento" required>
+                    <option value="">Selecciona un departamento</option>
+                    <option value="Psicología Clínica">Psicología Clínica</option>
+                    <option value="Psicología Educativa">Psicología Educativa</option>
+                    <option value="Psicología Organizacional">Psicología Organizacional</option>
+                    <option value="Psicología Social">Psicología Social</option>
+                    <option value="Neuropsicología">Neuropsicología</option>
+                    <option value="Psicoterapia">Psicoterapia</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="especialidad">Especialidad</label>
+                <input type="text" id="especialidad" name="especialidad" placeholder="Ej: Terapia Cognitivo-Conductual">
+            </div>
+
+            <div class="form-group">
+                <label for="cedula">Número de Cédula Profesional</label>
+                <input type="text" id="cedula" name="cedula" placeholder="Ej: 12345678">
+            </div>
+
+            <!-- 🔥 NUEVO CAMPO: Consultorio (OPCIONAL) -->
+            <div class="form-group">
+                <label for="consultorio">
+                    <i class="fas fa-building"></i> Consultorio / Dirección
+                    <span style="font-weight: 400; color: var(--text-muted); font-size: 0.8rem;">(Opcional)</span>
+                </label>
+                <input type="text" id="consultorio" name="consultorio" placeholder="Ej: Consultorio 301, Torre Médica, o 'Solo en línea'">
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                    <i class="fas fa-info-circle"></i> 
+                    Si solo ofreces terapia en línea, escribe "Solo en línea" o "Virtual"
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña <span class="required">*</span></label>
+                <input type="password" id="password" name="password" required minlength="8" placeholder="Mínimo 8 caracteres">
+                <i class="fas fa-eye password-toggle"></i>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <i class="fas fa-user-plus"></i> Registrar Psicólogo
+            </button>
+        </form>
+
+        <div class="form-footer">
+            <span>¿Ya tienes una cuenta? <a href="login.html">Inicia sesión</a></span>
+            <a href="index.html" class="home-link">Volver al inicio</a>
+        </div>
+    </div>
+
+    <script src="js/animations.js"></script>
+
+    <script type="module">
+        import { db } from './js/conexion.js';
+        import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle contraseña
+            document.querySelectorAll('.password-toggle').forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const passwordInput = toggle.closest('.form-group').querySelector('input');
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        toggle.classList.remove('fa-eye');
+                        toggle.classList.add('fa-eye-slash');
+                    } else {
+                        passwordInput.type = 'password';
+                        toggle.classList.remove('fa-eye-slash');
+                        toggle.classList.add('fa-eye');
+                    }
+                });
+            });
+
+            const form = document.getElementById('registerForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const alertSuccess = document.getElementById('alertSuccess');
+            const alertError = document.getElementById('alertError');
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                alertSuccess.classList.add('hidden');
+                alertError.classList.add('hidden');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
+                try {
+                    const nombre = document.getElementById('nombre').value.trim();
+                    const correo = document.getElementById('correo').value.trim().toLowerCase();
+                    const telefono = document.getElementById('telefono').value.trim();
+                    const departamento = document.getElementById('departamento').value;
+                    const especialidad = document.getElementById('especialidad').value.trim();
+                    const cedula = document.getElementById('cedula').value.trim();
+                    const consultorio = document.getElementById('consultorio').value.trim(); // 🔥 NUEVO
+                    const password = document.getElementById('password').value;
+
+                    // Validaciones
+                    if (!nombre || !correo || !telefono || !departamento || !password) {
+                        throw new Error('Todos los campos obligatorios deben ser llenados');
+                    }
+
+                    if (password.length < 8) {
+                        throw new Error('La contraseña debe tener al menos 8 caracteres');
+                    }
+
+                    // Verificar si el correo ya existe
+                    const usuariosRef = collection(db, "usuarios");
+                    const q = query(usuariosRef, where("correo", "==", correo));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        throw new Error('Este correo ya está registrado');
+                    }
+
+                    // 🔥 Crear usuario psicólogo/docente con el nuevo campo
+                    const userData = {
+                        nombre: nombre,
+                        correo: correo,
+                        telefono: telefono,
+                        password: password,
+                        departamento: departamento,
+                        especialidad: especialidad || '',
+                        cedula: cedula || '',
+                        consultorio: consultorio || '', // 🔥 NUEVO CAMPO (opcional)
+                        tipo_usuario: 'docente',
+                        fecha_registro: new Date().toISOString()
+                    };
+
+                    await addDoc(collection(db, "usuarios"), userData);
+
+                    alertSuccess.textContent = `✅ ¡Psicólogo ${nombre} registrado exitosamente!`;
+                    alertSuccess.classList.remove('hidden');
+                    form.reset();
+                    
+                } catch (error) {
+                    alertError.textContent = '❌ ' + error.message;
+                    alertError.classList.remove('hidden');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Registrar Psicólogo';
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+    
+            if (navToggle && navLinks) {
+                navToggle.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
