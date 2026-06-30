@@ -1,0 +1,433 @@
+/* ============================================
+   ESTILOS PARA GESTIÓN DE HORARIOS
+   ============================================ */
+
+.horarios-section {
+    margin-top: 30px;
+    border-top: 2px solid #E2E8F0;
+    padding-top: 25px;
+}
+
+.horarios-section h2 {
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.horarios-section h2 i {
+    color: var(--secondary-color);
+}
+
+.horario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.horario-dia-card {
+    background: #F7FAFC;
+    border: 2px solid #E2E8F0;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.horario-dia-card:hover {
+    border-color: var(--secondary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.horario-dia-card .dia-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #E2E8F0;
+}
+
+.horario-dia-card .dia-header h4 {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.horario-dia-card .dia-header .toggle-dia {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    background: #CBD5E0;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.horario-dia-card .dia-header .toggle-dia.active {
+    background: var(--secondary-color);
+}
+
+.horario-dia-card .dia-header .toggle-dia::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.horario-dia-card .dia-header .toggle-dia.active::after {
+    left: 25px;
+}
+
+.horario-dia-card .horas-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.horario-dia-card .hora-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #EDF2F7;
+    transition: all 0.3s ease;
+}
+
+.horario-dia-card .hora-item:hover {
+    border-color: var(--secondary-color);
+}
+
+.horario-dia-card .hora-item input[type="time"] {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.horario-dia-card .hora-item input[type="time"]:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.horario-dia-card .hora-item .btn-eliminar-hora {
+    background: #FEE2E2;
+    color: #EF4444;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.horario-dia-card .hora-item .btn-eliminar-hora:hover {
+    background: #EF4444;
+    color: white;
+}
+
+.horario-dia-card .btn-agregar-hora {
+    width: 100%;
+    padding: 8px;
+    border: 2px dashed #CBD5E0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+.horario-dia-card .btn-agregar-hora:hover {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+    background: rgba(66, 153, 225, 0.05);
+}
+
+.horario-dia-card.deshabilitado {
+    opacity: 0.5;
+    background: #EDF2F7;
+}
+
+.horario-dia-card.deshabilitado .horas-container {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* ===== HORARIOS DISPONIBLES EN AGENDAR CITA ===== */
+.horarios-disponibles {
+    margin-top: 15px;
+    padding: 15px;
+    background: #EBF8FF;
+    border-radius: var(--border-radius);
+    border: 1px solid #90CDF4;
+}
+
+.horarios-disponibles h4 {
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.horarios-disponibles .horas-disponibles-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.horarios-disponibles .hora-disponible {
+    padding: 6px 14px;
+    background: white;
+    border: 2px solid #E2E8F0;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-color);
+}
+
+.horarios-disponibles .hora-disponible:hover {
+    border-color: var(--secondary-color);
+    background: rgba(66, 153, 225, 0.05);
+}
+
+.horarios-disponibles .hora-disponible.seleccionada {
+    border-color: #10B981;
+    background: #ECFDF5;
+    color: #065F46;
+}
+
+.horarios-disponibles .hora-disponible.ocupada {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #F7FAFC;
+    text-decoration: line-through;
+}
+
+.horarios-disponibles .hora-disponible.ocupada:hover {
+    border-color: #E2E8F0;
+    background: #F7FAFC;
+}
+
+.horarios-disponibles .sin-horarios {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 10px 0;
+    text-align: center;
+}
+
+/* ===== BOTÓN DE GESTIÓN DE HORARIOS ===== */
+.btn-gestionar-horarios {
+    background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn-gestionar-horarios:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
+}
+
+.btn-gestionar-horarios i {
+    font-size: 1.1rem;
+}
+
+/* ===== MODAL DE HORARIOS ===== */
+.horarios-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.horarios-modal.active {
+    display: flex;
+}
+
+.horarios-modal-content {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalFadeIn 0.3s ease;
+    padding: 30px;
+}
+
+.horarios-modal-content .modal-close {
+    position: sticky;
+    top: 0;
+    float: right;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 10px;
+    z-index: 10;
+    transition: color 0.3s ease;
+}
+
+.horarios-modal-content .modal-close:hover {
+    color: #E53E3E;
+}
+
+.horarios-modal-content h2 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+}
+
+.horarios-modal-content .subtitle-modal {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 25px;
+}
+
+.horarios-modal-content .btn-guardar-horarios {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: var(--border-radius);
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.horarios-modal-content .btn-guardar-horarios:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+.horarios-modal-content .btn-guardar-horarios:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.horarios-modal-content .alert {
+    padding: 12px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+}
+
+.horarios-modal-content .alert-success {
+    background-color: #D4EDDA;
+    color: #155724;
+    border: 1px solid #C3E6CB;
+}
+
+.horarios-modal-content .alert-error {
+    background-color: #F8D7DA;
+    color: #721C24;
+    border: 1px solid #F5C6CB;
+}
+
+.horarios-modal-content .alert-info {
+    background-color: #D1ECF1;
+    color: #0C5460;
+    border: 1px solid #BEE5EB;
+}
+
+.horarios-modal-content .hidden {
+    display: none;
+}
+
+.horarios-modal-content .loading-spinner {
+    text-align: center;
+    padding: 20px;
+}
+
+.horarios-modal-content .loading-spinner .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: var(--secondary-color);
+    animation: spin 1s ease infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .horarios-modal-content {
+        padding: 20px;
+    }
+    .horario-grid {
+        grid-template-columns: 1fr;
+    }
+    .horario-dia-card .hora-item {
+        flex-wrap: wrap;
+    }
+    .horario-dia-card .hora-item input[type="time"] {
+        flex: 1;
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .horarios-modal-content h2 {
+        font-size: 1.4rem;
+    }
+    .horario-dia-card .dia-header h4 {
+        font-size: 0.95rem;
+    }
+}
